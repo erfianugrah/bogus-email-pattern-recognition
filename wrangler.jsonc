@@ -1,0 +1,58 @@
+/**
+ * For more details on how to configure Wrangler, refer to:
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "bogus-email-pattern-recognition",
+	"main": "src/index.ts",
+	"compatibility_date": "2025-10-11",
+	"observability": {
+		"enabled": true
+	},
+	/**
+	 * Environment Variables
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
+	 */
+	"vars": {
+		"RISK_THRESHOLD_BLOCK": "0.6",
+		"RISK_THRESHOLD_WARN": "0.3",
+		"ENABLE_MX_CHECK": "false",
+		"ENABLE_DISPOSABLE_CHECK": "true",
+		"ENABLE_PATTERN_CHECK": "true",
+		"LOG_ALL_VALIDATIONS": "true",
+		"LOG_LEVEL": "info",
+		// Custom Headers Configuration
+		"ENABLE_RESPONSE_HEADERS": "true",
+		"ENABLE_ORIGIN_HEADERS": "false",
+		"ORIGIN_URL": ""
+	},
+	/**
+	 * Analytics Engine
+	 * https://developers.cloudflare.com/analytics/analytics-engine/
+	 */
+	"analytics_engine_datasets": [
+		{
+			"binding": "ANALYTICS"
+		}
+	]
+	/**
+	 * Smart Placement
+	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	 */
+	// "placement": { "mode": "smart" }
+	/**
+	 * Note: Use secrets to store sensitive data.
+	 * https://developers.cloudflare.com/workers/configuration/secrets/
+	 */
+	/**
+	 * Static Assets
+	 * https://developers.cloudflare.com/workers/static-assets/binding/
+	 */
+	// "assets": { "directory": "./public/", "binding": "ASSETS" }
+	/**
+	 * Service Bindings (communicate between multiple Workers)
+	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
+	 */
+	// "services": [{ "binding": "MY_SERVICE", "service": "my-service" }]
+}
