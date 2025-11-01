@@ -227,9 +227,91 @@ DELETE /admin/config/cache
 
 # Health check
 GET /admin/health
+
+# Query analytics data
+GET /admin/analytics?query=<SQL>&hours=24
+
+# Get pre-built analytics queries
+GET /admin/analytics/queries
 ```
 
 **See [docs/CONFIGURATION.md](docs/CONFIGURATION.md) for complete Admin API documentation.**
+
+## Analytics Dashboard
+
+An advanced, interactive analytics dashboard similar to Python's Plotly Dash and Streamlit, built entirely client-side with Chart.js.
+
+### Features
+
+- **📊 Interactive Charts**: Zoom, pan, and download visualizations
+- **🔍 Query Builder**: Build SQL queries visually without writing code
+- **💻 Custom SQL**: Write advanced queries with full ClickHouse SQL support
+- **📋 Data Explorer**: Browse raw analytics data with pre-built views
+- **📥 Export Anywhere**: One-click CSV/JSON export
+- **🌓 Dark/Light Mode**: Professional theme switching
+- **⚡ Real-time Updates**: Live metrics and alerting
+
+### Quick Start
+
+**Access the dashboard:**
+```
+Local: http://localhost:8787/analytics.html
+Production: https://your-worker.workers.dev/analytics.html
+```
+
+**30-Second Setup:**
+1. Enter your Admin API key
+2. Click "Load Dashboard"
+3. View real-time fraud detection metrics
+
+**Features:**
+- **Dashboard Tab**: Overview with interactive charts
+- **Query Builder**: Visual filtering (no SQL required)
+- **Custom SQL**: Advanced queries with examples
+- **Data Explorer**: Browse raw data with pre-built views
+
+### Chart Interactions
+
+- **Scroll to zoom** in/out on any chart
+- **Click and drag** to pan across data
+- **Reset button** (🔄) to restore original view
+- **Download button** (📥) to export as PNG
+- **Dark mode toggle** (🌓) for theme switching
+
+### Documentation
+
+- **[Quick Start Guide](docs/ANALYTICS_QUICK_START.md)** - 5-minute setup
+- **[Full Dashboard Guide](docs/ANALYTICS_DASHBOARD.md)** - Complete features
+- **[Analytics Setup](docs/ANALYTICS_SETUP.md)** - Configure Analytics Engine
+- **[SQL Examples](docs/ANALYTICS.md)** - Pre-built queries
+
+### Example Queries
+
+**Find high-risk blocks:**
+```sql
+SELECT
+  blob3 as country,
+  SUM(_sample_interval) as count,
+  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk
+FROM ANALYTICS
+WHERE timestamp >= NOW() - INTERVAL '24' HOUR
+  AND blob1 = 'block'
+  AND double1 > 0.6
+GROUP BY country
+ORDER BY count DESC
+LIMIT 10
+```
+
+**Performance monitoring:**
+```sql
+SELECT
+  toStartOfHour(timestamp) as hour,
+  quantileExactWeighted(0.95)(double5, _sample_interval) as p95_latency
+FROM ANALYTICS
+WHERE timestamp >= NOW() - INTERVAL '7' DAY
+GROUP BY hour
+ORDER BY hour DESC
+```
 
 ## Installation
 

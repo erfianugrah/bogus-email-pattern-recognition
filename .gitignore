@@ -167,3 +167,8 @@ dist
 .wrangler/
 *claude*
 cf-docs
+
+# Project-specific
+data/fraudulent-emails.json
+data/remote-test-results.json
+*.log

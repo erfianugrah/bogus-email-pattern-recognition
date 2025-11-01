@@ -13,6 +13,20 @@ export interface ValidationMetric {
   blockReason?: string;
   fingerprintHash: string;
   latency: number;
+  // Enhanced data
+  emailLocalPart?: string;
+  domain?: string;
+  tld?: string;
+  patternType?: string;
+  patternFamily?: string;
+  isDisposable?: boolean;
+  isFreeProvider?: boolean;
+  hasPlusAddressing?: boolean;
+  hasKeyboardWalk?: boolean;
+  isGibberish?: boolean;
+  tldRiskScore?: number;
+  domainReputationScore?: number;
+  patternConfidence?: number;
 }
 
 /**
@@ -30,21 +44,36 @@ export function writeValidationMetric(
     analytics.writeDataPoint({
       // Categorical data (up to 20 blobs)
       blobs: [
-        metric.decision,
-        metric.blockReason || 'none',
-        metric.country || 'unknown',
-        getRiskBucket(metric.riskScore),
+        metric.decision,                                      // blob1
+        metric.blockReason || 'none',                         // blob2
+        metric.country || 'unknown',                          // blob3
+        getRiskBucket(metric.riskScore),                      // blob4
+        metric.domain || 'unknown',                           // blob5
+        metric.tld || 'unknown',                              // blob6
+        metric.patternType || 'none',                         // blob7
+        metric.patternFamily || 'none',                       // blob8
+        metric.isDisposable ? 'disposable' : 'normal',        // blob9
+        metric.isFreeProvider ? 'free' : 'normal',            // blob10
+        metric.hasPlusAddressing ? 'yes' : 'no',              // blob11
+        metric.hasKeyboardWalk ? 'yes' : 'no',                // blob12
+        metric.isGibberish ? 'yes' : 'no',                    // blob13
+        metric.emailLocalPart || 'unknown',                   // blob14
       ],
       // Numeric data (up to 20 doubles)
       doubles: [
-        metric.riskScore,
-        metric.entropyScore || 0,
-        metric.botScore || 0,
-        metric.asn || 0,
-        metric.latency,
+        metric.riskScore,                                     // double1
+        metric.entropyScore || 0,                             // double2
+        metric.botScore || 0,                                 // double3
+        metric.asn || 0,                                      // double4
+        metric.latency,                                       // double5
+        metric.tldRiskScore || 0,                             // double6
+        metric.domainReputationScore || 0,                    // double7
+        metric.patternConfidence || 0,                        // double8
       ],
-      // Indexed strings for filtering (up to 20 indexes)
-      indexes: [metric.fingerprintHash.substring(0, 32)],
+      // Indexed string for filtering (only 1 index allowed!)
+      indexes: [
+        metric.fingerprintHash.substring(0, 32),              // index1 (fingerprint for deduplication)
+      ],
     });
   } catch (error) {
     // Silently fail - don't break validation on metrics errors
