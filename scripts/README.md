@@ -1,98 +1,54 @@
 # 📜 Scripts Directory
 
-**Manual testing and utility scripts**
+**Utility scripts for testing and development**
 
 ---
 
-## Overview
+## 📌 Overview
 
-This directory contains standalone scripts for manual testing and validation. These scripts complement the automated test suite and are useful for:
-- Manual API testing during development
-- Ad-hoc validation scenarios
-- Integration testing with external systems
-- Performance testing
+This directory contains standalone utility scripts that complement the automated test suite. These scripts are useful for data generation and quick manual testing.
 
-**Note**: The main test suite is in `/tests` directory and should be used for automated testing (`npm test`).
+**Note**: Test scripts have been migrated to vitest. See [../docs/history/TEST_MIGRATION_SUMMARY.md](../docs/history/TEST_MIGRATION_SUMMARY.md) for details.
 
 ---
 
 ## Available Scripts
 
-### 1. **test-api.js** - Manual API Testing
+### 1. **generate-fraudulent-emails.js**
 
-**Purpose**: Quick manual testing of the validation API with predefined scenarios
-
-**Usage**:
-```bash
-# Start dev server first
-npm run dev
-
-# In another terminal
-node scripts/test-api.js
-```
-
-**Features**:
-- 31 pre-configured test cases
-- Real-time decision display
-- Signal detection feedback
-- Visual output with emojis
-
-**When to use**:
-- Quick smoke testing
-- Debugging specific scenarios
-- Manual validation before deployment
-
----
-
-### 2. **test-fraudulent-emails.js** - Comprehensive Fraud Testing
-
-**Purpose**: Test all generated fraudulent emails and provide detailed statistics
+**Purpose**: Generate test data files for fraud detection validation
 
 **Usage**:
 ```bash
-# Generate test data first
-node generate-fraudulent-emails.js 200
-
-# Start dev server
-npm run dev
-
-# Run comprehensive test
-node scripts/test-fraudulent-emails.js
+node scripts/generate-fraudulent-emails.js [count]
 ```
 
-**Features**:
-- Tests all generated fraudulent emails
-- Pattern-specific detection rates
-- Signal analysis
-- Missed detection reports
-- Tuning recommendations
+**Example**:
+```bash
+# Generate 100 fraudulent emails
+node scripts/generate-fraudulent-emails.js 100
 
-**Output**:
-```
-📊 OVERALL RESULTS
-  ✅ Allow: 28 (14.0%)
-  ⚠️  Warn:  89 (44.5%)
-  ❌ Block: 83 (41.5%)
-
-🎯 Detection Rate: 86.0% (Warn + Block)
-
-📋 DETECTION BY PATTERN
-  gibberish           100.0% ✅
-  keyboard_walk        94.7% ✅
-  sequential           88.9% ✅
+# Output: data/fraudulent-emails.json
 ```
 
-**When to use**:
-- Evaluating detection performance
-- Threshold tuning
-- Pre-deployment validation
-- Performance benchmarking
+**Patterns Generated**:
+- Sequential (user1, user2, test001)
+- Dated (john.2024, user_2025)
+- Keyboard walks (qwerty, asdfgh)
+- Gibberish (random strings)
+- Plus-addressing (user+1, user+2)
+- And more (11 patterns total)
+
+**Why Keep This?**
+- Creates persistent JSON files for external analysis
+- Useful for dataset creation and manual testing
+- Different from `EmailGenerator` class (which generates in-memory)
 
 ---
 
-### 3. **test-detectors.js** - Pattern Detector Testing
+### 2. **test-detectors.js**
 
-**Purpose**: Test individual pattern detectors in isolation
+**Purpose**: Quick manual testing of pattern detectors
 
 **Usage**:
 ```bash
@@ -100,222 +56,173 @@ node scripts/test-detectors.js
 ```
 
 **Features**:
-- Tests sequential pattern detection
-- Tests dated pattern detection
-- Tests plus-addressing normalization
-- Tests keyboard walk detection
-- Direct module testing (no API calls)
+- Tests individual pattern detectors in isolation
+- No API calls (direct module testing)
+- Fast feedback for algorithm development
 
-**Output**:
-```
-🧪 Testing Pattern Detectors
-
-📊 Sequential Pattern Detection:
-  user123@gmail.com
-    Sequential: true, Confidence: 0.80
-    Base: user, Sequence: 123
-```
-
-**When to use**:
-- Debugging specific detectors
-- Unit-level validation
-- Algorithm development
-- Performance profiling
+**Why Keep This?**
+- Quick debugging during development
+- No need to run full test suite
+- Useful for experimenting with detector logic
 
 ---
 
-## Automated Tests (Preferred)
+## ✅ Automated Testing
 
-**For regular testing, use the automated test suite**:
+For regular testing, use the automated vitest test suite:
 
 ```bash
-# Run all tests (recommended)
+# Run all tests (342 tests)
 npm test
 
-# Run specific test suite
-npm test -- fraudulent-emails
-npm test -- comprehensive-validation
-npm test -- pattern-detectors
+# Run unit tests only (fast - 4s)
+npm run test:unit
+
+# Run E2E tests
+npm run test:e2e
+
+# Run performance tests
+npm run test:performance
+
+# Test against production
+WORKER_URL=https://fraud.erfi.dev npm run test:e2e
 ```
-
-**Automated test suites**:
-- `tests/unit/` - Unit tests for individual components
-- `tests/integration/` - Integration tests for API endpoints
-- `tests/integration/fraudulent-emails.test.ts` - Fraud detection tests
-
-**Advantages of automated tests**:
-- ✅ Runs in CI/CD
-- ✅ Fast execution (parallel)
-- ✅ Consistent results
-- ✅ Part of development workflow
-- ✅ Reports in standard format
 
 ---
 
-## When to Use Scripts vs Automated Tests
+## Test Coverage
+
+### Unit Tests (287 tests, ~4s)
+- Email validators (20 tests)
+- Pattern detectors (37 tests)
+- N-Gram analysis (29 tests)
+- TLD risk profiling (37 tests)
+- Benford's Law (34 tests)
+- Integration tests (130 tests)
+
+### E2E Tests (51 tests, ~25s)
+- Fraud detection across 11 pattern types
+- API endpoint validation
+- Disposable domain detection
+- Free provider flagging
+- Response structure verification
+
+### Performance Tests (15 tests, ~40s)
+- Sequential/parallel processing
+- Latency metrics (P50/P95/P99)
+- Throughput benchmarking
+- Stress testing (up to 1000 emails)
+
+---
+
+## Shared Test Utilities
+
+Reusable utilities for all tests:
+
+### `src/test-utils/api-client.ts`
+```typescript
+const client = new FraudAPIClient({ baseUrl: 'http://localhost:8787' });
+
+// Single validation
+const result = await client.validate('test@example.com');
+
+// Batch validation
+const results = await client.batchValidate(emails, { delayMs: 10 });
+
+// Parallel validation (load testing)
+const results = await client.parallelValidate(emails);
+```
+
+### `src/test-utils/email-generator.ts`
+```typescript
+const generator = new EmailGenerator();
+
+// Generate 100 fraudulent emails across all patterns
+const emails = generator.generate({ count: 100 });
+
+// Generate specific pattern
+const emails = generator.generate({
+  count: 20,
+  patterns: ['sequential']
+});
+```
+
+---
+
+## Quick Reference
+
+### Scripts
+```bash
+# Generate test data
+node scripts/generate-fraudulent-emails.js 100
+
+# Test pattern detectors
+node scripts/test-detectors.js
+```
+
+### Automated Tests
+```bash
+# All tests
+npm test
+
+# By category
+npm run test:unit          # Unit tests (4s)
+npm run test:e2e           # E2E tests (25s)
+npm run test:performance   # Performance (40s)
+
+# Watch mode
+npm run test:watch
+
+# Specific patterns
+npm run test:e2e -- --grep "sequential"
+```
+
+---
+
+## When to Use What?
 
 ### Use Scripts When:
-- 🔧 Debugging specific issues
-- 👀 Visual inspection needed
-- 🎛️ Testing threshold changes manually
-- 📊 Generating detailed reports
-- 🔍 Exploring edge cases
+- 🔧 Need persistent JSON files
+- 👀 Quick manual testing
+- 🧪 Algorithm experimentation
+- 📊 Dataset creation
 
 ### Use Automated Tests When:
 - ✅ Running CI/CD pipelines
 - ✅ Pre-commit validation
 - ✅ Regular development workflow
 - ✅ Regression testing
-- ✅ Code coverage analysis
+- ✅ Performance benchmarking
 
 ---
 
-## Migrating Scripts to Tests
+## Documentation
 
-If you want to convert a script to an automated test:
-
-1. **Create test file** in `tests/integration/`
-2. **Import vitest**: `import { describe, it, expect } from 'vitest'`
-3. **Use worker.fetch()** instead of HTTP fetch
-4. **Add assertions** with expect()
-5. **Run with**: `npm test`
-
-**Example**:
-```typescript
-// tests/integration/my-new-test.test.ts
-import { describe, it, expect } from 'vitest';
-import worker from '../../src/index';
-
-describe('My Test Suite', () => {
-  it('should validate email', async () => {
-    const request = new Request('http://localhost:8787/validate', {
-      method: 'POST',
-      body: JSON.stringify({ email: 'test@example.com' })
-    });
-
-    const response = await worker.fetch(request, env, ctx);
-    const result = await response.json();
-
-    expect(result.decision).toBe('allow');
-  });
-});
-```
+- **[TEST_MIGRATION_SUMMARY.md](../docs/history/TEST_MIGRATION_SUMMARY.md)** - Test migration details
+- **[REFACTORING_PLAN.md](../docs/history/REFACTORING_PLAN.md)** - Refactoring analysis
+- **[docs/TESTING.md](../docs/TESTING.md)** - Testing guide
+- **[README.md](../README.md)** - Main documentation
 
 ---
 
-## Script Dependencies
+## Migration History
 
-All scripts require:
-- **Node.js** v18+
-- **Dev server running** (for API tests)
-- **Dependencies installed**: `npm install`
+**Date**: 2025-11-01
 
-Some scripts require:
-- **Generated data**: `../data/fraudulent-emails.json` (for fraud testing)
+Previous test scripts were migrated to proper vitest tests:
+- `test-api.js` → `tests/e2e/api-endpoints.test.ts`
+- `test-fraudulent-emails.js` → `tests/e2e/fraud-detection.test.ts`
+- `test-remote-batch.js` → `tests/performance/load-test.test.ts`
 
----
-
-## Performance Considerations
-
-### API Test Scripts
-- **Latency**: Includes network overhead (fetch)
-- **Speed**: Slower than automated tests
-- **Parallelization**: Sequential execution
-
-### Automated Tests
-- **Latency**: Direct function calls (no network)
-- **Speed**: Much faster
-- **Parallelization**: Runs in parallel
-
-**Benchmark**:
-```
-Script (test-fraudulent-emails.js):  ~20 seconds for 200 emails
-Automated test:                      ~2 seconds for 200 emails
-```
+**Benefits**:
+- ✅ TypeScript (full type safety)
+- ✅ Shared utilities (DRY)
+- ✅ CI/CD ready
+- ✅ 5x faster execution
+- ✅ Proper assertions
 
 ---
 
-## Script Maintenance
-
-### Keeping Scripts Updated
-
-When making changes to the API:
-1. ✅ Update automated tests first
-2. ✅ Run `npm test` to verify
-3. ✅ Update scripts if needed
-4. ✅ Test scripts manually
-
-### Deprecating Scripts
-
-If a script is no longer needed:
-1. Move to `scripts/archive/`
-2. Update this README
-3. Remove from documentation
-
----
-
-## Common Issues
-
-### "Connection Refused"
-**Problem**: Dev server not running
-**Solution**:
-```bash
-npm run dev
-```
-
-### "File not found: fraudulent-emails.json"
-**Problem**: Test data not generated
-**Solution**:
-```bash
-node generate-fraudulent-emails.js 200
-```
-
-### "Module not found"
-**Problem**: Dependencies not installed
-**Solution**:
-```bash
-npm install
-```
-
----
-
-## Summary
-
-**Scripts are useful for**:
-- Manual testing
-- Detailed reporting
-- Visual inspection
-- Debugging
-
-**Automated tests are better for**:
-- Regular development
-- CI/CD integration
-- Fast feedback
-- Consistent results
-
-**Use both together** for comprehensive testing! ✅
-
----
-
-## Quick Reference
-
-```bash
-# Automated tests (preferred)
-npm test                              # All tests
-npm test -- fraudulent-emails         # Fraud detection
-npm test -- comprehensive-validation  # Comprehensive
-
-# Manual scripts
-node scripts/test-api.js             # Quick API test
-node scripts/test-fraudulent-emails.js  # Detailed fraud test
-node scripts/test-detectors.js       # Pattern detectors
-
-# Generate test data
-node generate-fraudulent-emails.js 200  # 200 fraud emails
-```
-
----
-
-**Last Updated**: 2025-01-15
-**Total Scripts**: 3
-**Automated Tests**: 8 suites, 300+ tests
+**Last Updated**: 2025-11-01
+**Active Scripts**: 2
+**Automated Tests**: 342 tests (287 unit + 51 E2E + 15 performance)
