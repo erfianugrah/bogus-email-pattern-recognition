@@ -8,6 +8,9 @@
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types",
 		"test": "vitest",
+		"test:unit": "vitest tests/ --exclude tests/e2e/** --exclude tests/performance/**",
+		"test:e2e": "vitest tests/e2e/",
+		"test:performance": "vitest tests/performance/",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage"
 	},

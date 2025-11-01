@@ -416,25 +416,58 @@ riskScore = (entropy × 0.20) + (domainRep × 0.10) + (tldRisk × 0.10) + (patte
 ## Testing
 
 ```bash
-# Run all tests
+# Run all tests (unit + e2e + performance)
 npm test
+
+# Run unit tests only (fast - ~4s)
+npm run test:unit
+
+# Run E2E tests
+npm run test:e2e
+
+# Run performance tests
+npm run test:performance
 
 # Run tests in watch mode
 npm run test:watch
 
 # Run with coverage
 npm run test:coverage
+
+# Test against production
+WORKER_URL=https://your-worker.workers.dev npm run test:e2e
 ```
 
 **Test Coverage:**
-- **287 tests passing** (100% success rate)
-- Unit tests for validators and pattern detectors
-- Comprehensive tests for N-Gram analysis (29 tests)
-- TLD risk profiling tests (37 tests)
-- Benford's Law analysis tests (34 tests)
-- Integration tests for API endpoints
-- Real-world attack scenario simulations
-- Fraudulent email detection tests (13 tests)
+- **342 tests passing** (100% success rate)
+- **287 unit tests**: Validators, pattern detectors, integration
+- **51 E2E tests**: Fraud detection, API endpoints
+- **15 performance tests**: Load testing, latency metrics, throughput
+
+**Test Categories:**
+- **Unit Tests** (287 tests, ~4s):
+  - Email validators (20 tests)
+  - Pattern detectors (37 tests)
+  - N-Gram analysis (29 tests)
+  - TLD risk profiling (37 tests)
+  - Benford's Law (34 tests)
+  - Integration tests (130 tests)
+
+- **E2E Tests** (51 tests, ~25s):
+  - Fraud detection across 11 pattern types
+  - API endpoint validation
+  - Disposable domain detection
+  - Free provider flagging
+  - Response structure verification
+
+- **Performance Tests** (15 tests, ~40s):
+  - Sequential/parallel processing
+  - Latency metrics (P50/P95/P99)
+  - Throughput benchmarking
+  - Stress testing (up to 1000 emails)
+  - Detection accuracy under load
+
+**See [docs/history/TEST_MIGRATION_SUMMARY.md](docs/history/TEST_MIGRATION_SUMMARY.md) for detailed testing documentation.**
 
 ## Performance
 
