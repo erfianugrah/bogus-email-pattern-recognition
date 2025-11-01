@@ -275,7 +275,10 @@ app.post('/validate', async (c) => {
 			});
 		}
 
-		// Write metrics to Analytics Engine
+		// Write metrics to Analytics Engine (with enhanced data)
+		const [localPart, domain] = body.email.split('@');
+		const tld = domain ? domain.split('.').pop() : undefined;
+
 		writeValidationMetric(env.ANALYTICS, {
 			decision: result.decision,
 			riskScore: result.riskScore,
@@ -286,6 +289,20 @@ app.post('/validate', async (c) => {
 			blockReason: decision === 'block' ? blockReason : undefined,
 			fingerprintHash: fingerprint.hash,
 			latency,
+			// Enhanced data
+			emailLocalPart: localPart,
+			domain: domain,
+			tld: tld,
+			patternType: result.signals.patternType,
+			patternFamily: result.signals.patternFamily,
+			isDisposable: result.signals.isDisposableDomain,
+			isFreeProvider: result.signals.isFreeProvider,
+			hasPlusAddressing: result.signals.hasPlusAddressing,
+			hasKeyboardWalk: result.signals.hasKeyboardWalk,
+			isGibberish: result.signals.isGibberish,
+			tldRiskScore: result.signals.tldRiskScore,
+			domainReputationScore: result.signals.domainReputationScore,
+			patternConfidence: result.signals.patternConfidence,
 		});
 
 		// Build response

@@ -8,6 +8,10 @@ declare namespace Cloudflare {
 	interface Env {
 		CONFIG: KVNamespace;
 		ANALYTICS: AnalyticsEngineDataset;
+		CLOUDFLARE_ACCOUNT_ID?: string;
+		CLOUDFLARE_API_TOKEN?: string;
+		ADMIN_API_KEY?: string;
+		ORIGIN_URL?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
