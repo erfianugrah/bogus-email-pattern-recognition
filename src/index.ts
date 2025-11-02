@@ -25,6 +25,7 @@ import {
 import { MarkovEnsembleDetector, type EnsembleResult } from './detectors/markov-ensemble';
 import { getConfig } from './config';
 import adminRoutes from './routes/admin';
+import analyticsRoutes from './routes/analytics';
 import { scheduled as trainingWorkerScheduled } from './workers/training-worker';
 import { retrainMarkovModels as retrainLegacyModels } from './training/online-learning';
 import {
@@ -183,6 +184,9 @@ app.use('/*', cors());
 
 // Mount admin routes (protected by API key)
 app.route('/admin', adminRoutes);
+
+// Mount analytics API routes (protected by API key)
+app.route('/api/analytics', analyticsRoutes);
 
 // Root endpoint - Welcome message
 app.get('/', (c) => {
