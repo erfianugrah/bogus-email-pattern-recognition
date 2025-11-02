@@ -20,17 +20,7 @@ interface TrainingOptions {
   orders: number[]; // N-gram orders to train (1, 2, 3)
 }
 
-const DEFAULT_DATASETS = [
-  'dataset/8339691/CEAS_08.csv',
-  'dataset/8339691/SpamAssasin.csv',
-  'dataset/8339691/Nigerian_Fraud.csv',
-  'dataset/8339691/Nigerian_5.csv',
-  'dataset/8339691/Nazario.csv',
-  'dataset/8339691/Nazario_5.csv',
-  'dataset/8339691/TREC_05.csv',
-  'dataset/8339691/TREC_06.csv',
-  'dataset/8339691/TREC_07.csv',
-];
+// Removed hardcoded DEFAULT_DATASETS - now scans directory dynamically
 
 function extractLocalPart(sender: string): string | null {
   const emailMatch = sender.match(/<([^>]+)>/) || sender.match(/([^\s]+@[^\s]+)/);
@@ -131,7 +121,7 @@ USAGE
   npm run cli train:markov [options]
 
 OPTIONS
-  --dataset <path>    Path to dataset directory (default: ./dataset/8339691)
+  --dataset <path>    Path to dataset directory (default: ./dataset)
   --output <path>     Output directory for models (default: ./)
   --orders <list>     Comma-separated n-gram orders to train (default: "2")
                       Valid orders: 1 (unigram), 2 (bigram), 3 (trigram)
@@ -169,7 +159,7 @@ EXAMPLES
   }
 
   const options: TrainingOptions = {
-    dataset: getOption(parsed, 'dataset') || 'dataset/8339691',
+    dataset: getOption(parsed, 'dataset') || './dataset',
     output: getOption(parsed, 'output') || './',
     upload: hasFlag(parsed, 'upload'),
     remote: hasFlag(parsed, 'remote'),
@@ -179,15 +169,30 @@ EXAMPLES
   logger.section('🚀 Markov Chain Model Training');
   logger.info(`N-gram orders: ${options.orders.join(', ')}`);
 
-  // Load datasets
+  // Load datasets - scan directory for CSV files
   logger.subsection('Loading Datasets');
   let allLegit: string[] = [];
   let allFraud: string[] = [];
 
-  for (const file of DEFAULT_DATASETS) {
-    const { legit, fraud } = await loadCSV(file);
-    allLegit.push(...legit);
-    allFraud.push(...fraud);
+  // Get all CSV files in the dataset directory
+  const { readdirSync } = await import('fs');
+  const { join } = await import('path');
+
+  try {
+    const files = readdirSync(options.dataset)
+      .filter(f => f.endsWith('.csv'))
+      .map(f => join(options.dataset, f));
+
+    logger.info(`Found ${files.length} CSV files in ${options.dataset}`);
+
+    for (const file of files) {
+      const { legit, fraud } = await loadCSV(file);
+      allLegit.push(...legit);
+      allFraud.push(...fraud);
+    }
+  } catch (error) {
+    logger.error(`Failed to read dataset directory: ${error}`);
+    throw error;
   }
 
   logger.subsection('Dataset Statistics');

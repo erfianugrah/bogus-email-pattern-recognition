@@ -20,10 +20,7 @@ import {
 	isHighRiskTLD,
 	detectMarkovPattern,
 	DynamicMarkovChain,
-	type MarkovResult,
-	checkWhitelist,
-	loadWhitelistConfig,
-	type WhitelistResult
+	type MarkovResult
 } from './detectors/index';
 import { MarkovEnsembleDetector, type EnsembleResult } from './detectors/markov-ensemble';
 import { getConfig } from './config';
@@ -450,8 +447,9 @@ app.post('/validate', async (c) => {
 			}
 		}
 
-		// Pattern Whitelisting (Priority 2 improvement)
-		// Check if email matches known-good patterns and reduce risk score
+		// Pattern Whitelisting (Priority 2 improvement) - DISABLED
+		// DISABLED: Causing too many false negatives
+		/*
 		let whitelistResult: WhitelistResult | undefined;
 		const originalRiskScore = riskScore;
 
@@ -482,6 +480,7 @@ app.post('/validate', async (c) => {
 				}
 			}
 		}
+		*/
 
 		// Get thresholds from configuration
 		const blockThreshold = config.riskThresholds.block;
@@ -535,13 +534,7 @@ app.post('/validate', async (c) => {
 					markovCrossEntropyLegit: Math.round(markovResult.crossEntropyLegit * 100) / 100,
 					markovCrossEntropyFraud: Math.round(markovResult.crossEntropyFraud * 100) / 100,
 				}),
-				// Priority 2: Whitelist signals
-				...(whitelistResult && whitelistResult.matched && {
-					whitelistMatched: true,
-					whitelistRiskReduction: Math.round(whitelistResult.riskReduction * 100) / 100,
-					whitelistReason: whitelistResult.reason,
-					originalRiskScore: Math.round(originalRiskScore * 100) / 100,
-				})
+			// Priority 2: Whitelist signals - DISABLED
 			},
 			decision,
 			message: domainValidation?.reason || emailValidation.reason || 'Email validation completed',
