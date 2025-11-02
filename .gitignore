@@ -178,3 +178,4 @@ test-emails.json
 markov_*.json
 training*.log
 dataset
+public/dashboard/
