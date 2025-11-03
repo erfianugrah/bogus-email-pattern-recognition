@@ -118,21 +118,61 @@ Validate an email address and return risk assessment.
 
 #### Risk Score Calculation
 
-The risk score is calculated from multiple signals:
+The risk score (0.0-1.0) is calculated using a **hybrid scoring strategy** that prevents double-counting:
 
 ```typescript
-riskScore = 0.0
-
+// Special cases (fast-path)
 if (!formatValid) {
-  riskScore = 0.8  // Invalid format
+  riskScore = 0.8;  // Invalid format
+  blockReason = 'invalid_format';
+} else if (isDisposableDomain) {
+  riskScore = 0.95;  // Known disposable (71,751-domain list)
+  blockReason = 'disposable_domain';
 } else if (entropyScore > 0.7) {
-  riskScore = entropyScore  // High randomness
-} else if (localPartLength < 3) {
-  riskScore = 0.8  // Too short
+  riskScore = entropyScore;  // Extreme randomness
+  blockReason = 'high_entropy';
 } else {
-  riskScore = entropyScore * 0.5  // Normal risk
+  // Normal case: Multi-signal analysis with hybrid scoring
+
+  // Step 1: Domain signals (independent) → ADDITIVE
+  const domainRisk = domainReputationScore * 0.15;  // Disposable detection
+  const tldRisk = tldRiskScore * 0.15;              // TLD risk (142 TLDs)
+  const domainBasedRisk = domainRisk + tldRisk;
+
+  // Step 2: Local part signals (overlapping) → MAX-BASED
+  const entropyRisk = entropyScore * 0.05;           // Randomness baseline
+  const patternRisk = patternScore * 0.30;           // 5 pattern detectors
+  const markovRisk = markovScore * 0.35;             // Character transitions
+  const localPartRisk = Math.max(entropyRisk, patternRisk, markovRisk);
+
+  // Step 3: Combine and clamp
+  riskScore = Math.min(domainBasedRisk + localPartRisk, 1.0);
 }
 ```
+
+**Why Hybrid Scoring?**
+- Domain + TLD check **different properties** → can both be high → add them
+- Pattern + Markov check **same data** (local part) → take max to avoid double-counting
+
+**Example**:
+```
+Email: user123@gmail.com
+
+Signals:
+  domainReputationScore: 0.0  (gmail whitelisted)
+  tldRiskScore: 0.29          (.com is standard)
+  patternScore: 0.85          (sequential pattern detected)
+  markovScore: 0.78           (fraudulent transitions detected)
+
+Calculation:
+  domainBasedRisk = (0.0 * 0.15) + (0.29 * 0.15) = 0.044
+  localPartRisk = max(0.85 * 0.30, 0.78 * 0.35) = max(0.255, 0.273) = 0.273
+  riskScore = 0.044 + 0.273 = 0.317
+
+Decision: WARN (0.3 <= 0.317 < 0.6)
+```
+
+**See [docs/SCORING.md](./SCORING.md) for complete scoring documentation with more examples.**
 
 ### GET /debug
 

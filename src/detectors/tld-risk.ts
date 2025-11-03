@@ -24,7 +24,7 @@ export interface TLDRiskProfile {
 /**
  * TLD risk profiles based on research and abuse statistics
  */
-const TLD_RISK_PROFILES: Map<string, TLDRiskProfile> = new Map([
+export const TLD_RISK_PROFILES: Map<string, TLDRiskProfile> = new Map([
   // Trusted TLDs (Restricted/Verified)
   ['edu', {
     tld: 'edu',
@@ -1355,9 +1355,10 @@ function extractTLD(domain: string): string {
  * @param domain - Email domain (e.g., "example.com")
  * @returns TLD risk analysis
  */
-export function analyzeTLDRisk(domain: string): TLDRiskAnalysis {
+export function analyzeTLDRisk(domain: string, customProfiles?: Map<string, TLDRiskProfile>): TLDRiskAnalysis {
   const tld = extractTLD(domain);
-  const profile = TLD_RISK_PROFILES.get(tld) || null;
+  const profiles = customProfiles && customProfiles.size > 0 ? customProfiles : TLD_RISK_PROFILES;
+  const profile = profiles.get(tld) || null;
 
   if (!profile) {
     // Unknown TLD - assign moderate risk
@@ -1387,25 +1388,26 @@ export function analyzeTLDRisk(domain: string): TLDRiskAnalysis {
 /**
  * Get TLD category
  */
-export function getTLDCategory(domain: string): string {
+export function getTLDCategory(domain: string, customProfiles?: Map<string, TLDRiskProfile>): string {
   const tld = extractTLD(domain);
-  const profile = TLD_RISK_PROFILES.get(tld);
+  const profiles = customProfiles && customProfiles.size > 0 ? customProfiles : TLD_RISK_PROFILES;
+  const profile = profiles.get(tld);
   return profile?.category || 'unknown';
 }
 
 /**
  * Check if TLD is high risk
  */
-export function isHighRiskTLD(domain: string): boolean {
-  const analysis = analyzeTLDRisk(domain);
+export function isHighRiskTLD(domain: string, customProfiles?: Map<string, TLDRiskProfile>): boolean {
+  const analysis = analyzeTLDRisk(domain, customProfiles);
   return analysis.riskScore > 0.7 || analysis.category === 'high_risk';
 }
 
 /**
  * Check if TLD is trusted
  */
-export function isTrustedTLD(domain: string): boolean {
-  const analysis = analyzeTLDRisk(domain);
+export function isTrustedTLD(domain: string, customProfiles?: Map<string, TLDRiskProfile>): boolean {
+  const analysis = analyzeTLDRisk(domain, customProfiles);
   return analysis.category === 'trusted';
 }
 
@@ -1437,4 +1439,11 @@ export function getTLDStats(): {
     suspicious: profiles.filter(p => p.category === 'suspicious').length,
     highRisk: profiles.filter(p => p.category === 'high_risk').length,
   };
+}
+
+/**
+ * Get all TLD risk profiles as an array (useful for KV storage)
+ */
+export function getAllTLDProfiles(): TLDRiskProfile[] {
+  return Array.from(TLD_RISK_PROFILES.values());
 }

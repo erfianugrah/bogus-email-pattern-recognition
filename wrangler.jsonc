@@ -32,6 +32,16 @@
 			"id": "fcfe1c2f322a43a7b242eff4c8fb91ce",
 			"remote": true
 		},
+		{
+			"binding": "DISPOSABLE_DOMAINS_LIST",
+			"id": "6bb73f48f9804c888f5ce9406d3bf3d6",
+			"remote": true
+		},
+		{
+			"binding": "TLD_LIST",
+			"id": "30a4c2d7396c44d5aab003b05fd95742",
+			"remote": true
+		}
 	],
 	/**
 	 * Analytics Engine
@@ -44,11 +54,15 @@
 	],
 	/**
 	 * Cron Triggers
-	 * Schedule online learning model retraining every 6 hours
+	 * Every 6 hours:
+	 * 1. Update disposable domain list from external sources (GitHub)
+	 * 2. Retrain online learning models (N-gram ensemble)
 	 * https://developers.cloudflare.com/workers/configuration/cron-triggers/
 	 */
 	"triggers": {
-		"crons": ["0 */6 * * *"]  // Every 6 hours at :00 (12am, 6am, 12pm, 6pm UTC)
+		"crons": [
+			"0 */6 * * *"
+		] // Every 6 hours at :00 (12am, 6am, 12pm, 6pm UTC)
 	},
 	/**
 	 * Static Assets

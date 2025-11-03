@@ -7,6 +7,8 @@ import { generateFingerprint, extractAllSignals } from './fingerprint';
 import { logger, logValidation, logBlock, logError } from './logger';
 import { writeValidationMetric } from './utils/metrics';
 import type { ValidationResult } from './types';
+import { loadDisposableDomains, updateDisposableDomains } from './services/disposable-domain-updater';
+import { loadTLDRiskProfiles } from './services/tld-risk-updater';
 import {
 	extractPatternFamily,
 	getPatternRiskScore,
@@ -267,6 +269,32 @@ app.post('/validate', async (c) => {
 		// Validate email format
 		const emailValidation = validateEmail(body.email);
 
+		// Load disposable domains from KV (with caching and fallback to hardcoded)
+		let disposableDomains: Set<string> | undefined;
+		if (env.DISPOSABLE_DOMAINS_LIST && config.features.enableDisposableCheck) {
+			try {
+				disposableDomains = await loadDisposableDomains(env.DISPOSABLE_DOMAINS_LIST);
+			} catch (error) {
+				logger.warn({
+					event: 'disposable_domains_load_failed',
+					error: error instanceof Error ? error.message : String(error)
+				}, 'Failed to load disposable domains from KV, using hardcoded fallback');
+			}
+		}
+
+		// Load TLD risk profiles from KV (with caching and fallback to hardcoded)
+		let tldRiskProfiles: Map<string, any> | undefined;
+		if (env.TLD_LIST && config.features.enableTLDRiskProfiling) {
+			try {
+				tldRiskProfiles = await loadTLDRiskProfiles(env.TLD_LIST);
+			} catch (error) {
+				logger.warn({
+					event: 'tld_profiles_load_failed',
+					error: error instanceof Error ? error.message : String(error)
+				}, 'Failed to load TLD profiles from KV, using hardcoded fallback');
+			}
+		}
+
 		// Validate domain (if format is valid)
 		let domainValidation;
 		let domainReputationScore = 0;
@@ -275,12 +303,12 @@ app.post('/validate', async (c) => {
 		if (emailValidation.valid) {
 			const [, domain] = body.email.split('@');
 			if (domain && config.features.enableDisposableCheck) {
-				domainValidation = validateDomain(domain);
-				domainReputationScore = getDomainReputationScore(domain);
+				domainValidation = validateDomain(domain, disposableDomains);
+				domainReputationScore = getDomainReputationScore(domain, disposableDomains);
 
 				// TLD risk profiling (Phase 6A)
 				if (config.features.enableTLDRiskProfiling) {
-					const tldAnalysis = analyzeTLDRisk(domain);
+					const tldAnalysis = analyzeTLDRisk(domain, tldRiskProfiles);
 					tldRiskScore = tldAnalysis.riskScore;
 				}
 			}
@@ -447,41 +475,6 @@ app.post('/validate', async (c) => {
 			}
 		}
 
-		// Pattern Whitelisting (Priority 2 improvement) - DISABLED
-		// DISABLED: Causing too many false negatives
-		/*
-		let whitelistResult: WhitelistResult | undefined;
-		const originalRiskScore = riskScore;
-
-		if (emailValidation.valid) {
-			// Load whitelist configuration from KV
-			const whitelistConfig = await loadWhitelistConfig(env.CONFIG);
-
-			// Check whitelist with pattern family context
-			whitelistResult = checkWhitelist(
-				body.email,
-				whitelistConfig,
-				patternFamilyResult?.family
-			);
-
-			// Apply risk reduction if matched
-			if (whitelistResult.matched && whitelistResult.riskReduction > 0) {
-				const reducedRisk = riskScore * (1 - whitelistResult.riskReduction);
-				riskScore = Math.max(reducedRisk, 0); // Never go negative
-
-				if (config.logging.logAllValidations) {
-					logger.info({
-						event: 'whitelist_matched',
-						original_risk: originalRiskScore,
-						reduced_risk: riskScore,
-						reduction_percent: whitelistResult.riskReduction,
-						reason: whitelistResult.reason,
-					}, 'Email matched whitelist');
-				}
-			}
-		}
-		*/
-
 		// Get thresholds from configuration
 		const blockThreshold = config.riskThresholds.block;
 		const warnThreshold = config.riskThresholds.warn;
@@ -534,7 +527,6 @@ app.post('/validate', async (c) => {
 					markovCrossEntropyLegit: Math.round(markovResult.crossEntropyLegit * 100) / 100,
 					markovCrossEntropyFraud: Math.round(markovResult.crossEntropyFraud * 100) / 100,
 				}),
-			// Priority 2: Whitelist signals - DISABLED
 			},
 			decision,
 			message: domainValidation?.reason || emailValidation.reason || 'Email validation completed',
@@ -797,6 +789,19 @@ export default {
 			cron_schedule: event.cron,
 		}, 'Cron trigger fired');
 
+		// Task 1: Update disposable domain list from external sources
+		if (env.DISPOSABLE_DOMAINS_LIST) {
+			logger.info({
+				event: 'disposable_domains_update_started',
+				trigger_type: 'scheduled',
+			}, 'Starting automated disposable domain list update');
+
+			ctx.waitUntil(updateDisposableDomains(env.DISPOSABLE_DOMAINS_LIST));
+		} else {
+			logger.warn('DISPOSABLE_DOMAINS_LIST KV namespace not configured, skipping update');
+		}
+
+		// Task 2: Train N-gram ensemble models
 		logger.info({
 			event: 'training_started',
 			trigger_type: 'scheduled',

@@ -15,6 +15,8 @@ declare global {
 
 		// KV Namespaces (defined in wrangler.jsonc)
 		MARKOV_MODEL?: KVNamespace;  // Separate namespace for model storage
+		DISPOSABLE_DOMAINS_LIST?: KVNamespace;  // Namespace for disposable domain list
+		TLD_LIST?: KVNamespace;  // Namespace for TLD risk profiles
 
 		// Feature flags (optional, for Phase 2)
 		AUTO_PROMOTE_TO_CANARY?: string;  // Set to "true" to enable auto-promotion

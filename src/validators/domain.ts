@@ -1,5 +1,5 @@
 import {
-  isDisposableDomain,
+  isDisposableDomain as isDisposableDomainFallback,
   matchesDisposablePattern,
   isFreeEmailProvider,
 } from '../data/disposable-domains';
@@ -18,9 +18,26 @@ export interface DomainValidationResult {
 }
 
 /**
- * Validate domain and check for disposable/suspicious patterns
+ * Check if a domain is disposable using provided set or fallback
  */
-export function validateDomain(domain: string): DomainValidationResult {
+function isDisposableDomain(domain: string, disposableDomains?: Set<string>): boolean {
+  const normalizedDomain = domain.toLowerCase().trim();
+
+  // Use KV-loaded list if available, otherwise fallback to hardcoded
+  if (disposableDomains && disposableDomains.size > 0) {
+    return disposableDomains.has(normalizedDomain);
+  }
+
+  return isDisposableDomainFallback(normalizedDomain);
+}
+
+/**
+ * Validate domain and check for disposable/suspicious patterns
+ *
+ * @param domain - Domain to validate
+ * @param disposableDomains - Optional Set of disposable domains from KV (falls back to hardcoded if not provided)
+ */
+export function validateDomain(domain: string, disposableDomains?: Set<string>): DomainValidationResult {
   const normalizedDomain = domain.toLowerCase().trim();
 
   // Basic validation
@@ -95,7 +112,7 @@ export function validateDomain(domain: string): DomainValidationResult {
   }
 
   // Check against disposable list
-  const isDisposableExact = isDisposableDomain(normalizedDomain);
+  const isDisposableExact = isDisposableDomain(normalizedDomain, disposableDomains);
   const matchesPattern = matchesDisposablePattern(normalizedDomain);
   const isFree = isFreeEmailProvider(normalizedDomain);
 
@@ -175,9 +192,12 @@ export function isDomainSuspicious(domain: string): {
 
 /**
  * Get domain reputation score (0.0 = trusted, 1.0 = suspicious)
+ *
+ * @param domain - Domain to score
+ * @param disposableDomains - Optional Set of disposable domains from KV (falls back to hardcoded if not provided)
  */
-export function getDomainReputationScore(domain: string): number {
-  const validation = validateDomain(domain);
+export function getDomainReputationScore(domain: string, disposableDomains?: Set<string>): number {
+  const validation = validateDomain(domain, disposableDomains);
   const suspicious = isDomainSuspicious(domain);
 
   let score = 0.0;
