@@ -79,6 +79,46 @@ const COMMANDS = {
     file: 'commands/data/analytics.ts',
     usage: 'analytics:stats [--last <hours>]'
   },
+  'domains:update': {
+    description: 'Update disposable domains from external sources',
+    file: 'commands/data/domains.ts',
+    usage: 'domains:update'
+  },
+  'domains:metadata': {
+    description: 'Show disposable domains metadata',
+    file: 'commands/data/domains.ts',
+    usage: 'domains:metadata'
+  },
+  'domains:cache:clear': {
+    description: 'Clear disposable domains cache',
+    file: 'commands/data/domains.ts',
+    usage: 'domains:cache:clear'
+  },
+  'tld:sync': {
+    description: 'Sync hardcoded TLD profiles to KV',
+    file: 'commands/data/tld.ts',
+    usage: 'tld:sync'
+  },
+  'tld:metadata': {
+    description: 'Show TLD profiles metadata',
+    file: 'commands/data/tld.ts',
+    usage: 'tld:metadata'
+  },
+  'tld:get': {
+    description: 'Get a single TLD profile',
+    file: 'commands/data/tld.ts',
+    usage: 'tld:get <tld>'
+  },
+  'tld:update': {
+    description: 'Update a single TLD profile',
+    file: 'commands/data/tld.ts',
+    usage: 'tld:update <tld> <json>'
+  },
+  'tld:cache:clear': {
+    description: 'Clear TLD profiles cache',
+    file: 'commands/data/tld.ts',
+    usage: 'tld:cache:clear'
+  },
 
   // Testing commands
   'test:generate': {
@@ -173,6 +213,14 @@ Usage: npm run cli <command> [options]
   kv:delete <key>           Delete KV key
   analytics:query <sql>     Query Analytics Engine
   analytics:stats           Show analytics statistics
+  domains:update            Update disposable domains list
+  domains:metadata          Show domains metadata
+  domains:cache:clear       Clear domains cache
+  tld:sync                  Sync TLD profiles to KV
+  tld:metadata              Show TLD profiles metadata
+  tld:get <tld>             Get single TLD profile
+  tld:update <tld> <json>   Update TLD profile
+  tld:cache:clear           Clear TLD cache
 
 🧪 TESTING COMMANDS
   test:generate             Generate test dataset
@@ -237,8 +285,8 @@ async function main() {
     const commandPath = join(__dirname, commandConfig.file);
     const commandModule = await import(commandPath);
 
-    // Pass remaining args to command
-    await commandModule.default(args.slice(1));
+    // Pass remaining args to command, and command name for multi-command handlers
+    await commandModule.default(args.slice(1), command);
   } catch (error) {
     console.error(`❌ Error executing command "${command}":`, error);
     process.exit(1);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -13,17 +13,32 @@ import {
   loadLatencyDistribution, loadASNs, loadTLDRiskScores, loadDomainReputation,
   loadPatternConfidence, getApiKey, setApiKey, clearApiKey, type Stats
 } from '@/lib/api'
-import { Activity, Shield, AlertTriangle, CheckCircle, Clock, Key, LogOut, Target, Moon, Sun } from 'lucide-react'
+import { Activity, Shield, AlertTriangle, CheckCircle, Clock, Key, LogOut, Target, Moon, Sun, RefreshCw, Maximize2, Minimize2 } from 'lucide-react'
 import { SimpleBarChart } from '@/components/SimpleBarChart'
 import { ExportButton } from '@/components/ExportButton'
 import { QueryBuilder } from '@/components/QueryBuilder'
 import { DataExplorer } from '@/components/DataExplorer'
 import { DataManagement } from '@/components/DataManagement'
 
+// Theme-aware colors that work in both light and dark modes
 const COLORS = {
-  allow: 'hsl(142 76% 36%)',
-  warn: 'hsl(48 96% 53%)',
-  block: 'hsl(0 84% 60%)',
+  allow: {
+    light: 'hsl(142 76% 36%)',
+    dark: 'hsl(142 70% 45%)'
+  },
+  warn: {
+    light: 'hsl(48 96% 53%)',
+    dark: 'hsl(48 90% 60%)'
+  },
+  block: {
+    light: 'hsl(0 84% 60%)',
+    dark: 'hsl(0 80% 65%)'
+  },
+}
+
+// Helper to get color based on current theme
+const getColor = (colorKey: keyof typeof COLORS, isDark: boolean) => {
+  return isDark ? COLORS[colorKey].dark : COLORS[colorKey].light
 }
 
 function App() {
@@ -56,10 +71,23 @@ function App() {
   const [hasApiKey, setHasApiKey] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
+      // Check localStorage first, fallback to system preference
+      const saved = localStorage.getItem('darkMode')
+      if (saved !== null) {
+        return saved === 'true'
+      }
       return window.matchMedia('(prefers-color-scheme: dark)').matches
     }
     return false
   })
+
+  // Chart-specific loading states
+  const [decisionsLoading, setDecisionsLoading] = useState(false)
+  const [riskLoading, setRiskLoading] = useState(false)
+  const [timelineLoading, setTimelineLoading] = useState(false)
+  const [decisionsFullscreen, setDecisionsFullscreen] = useState(false)
+  const [riskFullscreen, setRiskFullscreen] = useState(false)
+  const [timelineFullscreen, setTimelineFullscreen] = useState(false)
 
   // Check for existing API key on mount
   useEffect(() => {
@@ -71,8 +99,10 @@ function App() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark')
+      localStorage.setItem('darkMode', 'true')
     } else {
       document.documentElement.classList.remove('dark')
+      localStorage.setItem('darkMode', 'false')
     }
   }, [darkMode])
 
@@ -166,6 +196,43 @@ function App() {
     setRiskDistribution([])
     setTimeline([])
   }
+
+  // Individual chart refresh handlers
+  const refreshDecisions = useCallback(async () => {
+    setDecisionsLoading(true)
+    try {
+      const data = await loadDecisions(timeRange)
+      setDecisions(data)
+    } catch (err) {
+      console.error('Failed to refresh decisions:', err)
+    } finally {
+      setDecisionsLoading(false)
+    }
+  }, [timeRange])
+
+  const refreshRisk = useCallback(async () => {
+    setRiskLoading(true)
+    try {
+      const data = await loadRiskDistribution(timeRange)
+      setRiskDistribution(data)
+    } catch (err) {
+      console.error('Failed to refresh risk:', err)
+    } finally {
+      setRiskLoading(false)
+    }
+  }, [timeRange])
+
+  const refreshTimeline = useCallback(async () => {
+    setTimelineLoading(true)
+    try {
+      const data = await loadTimeline(timeRange)
+      setTimeline(data)
+    } catch (err) {
+      console.error('Failed to refresh timeline:', err)
+    } finally {
+      setTimelineLoading(false)
+    }
+  }, [timeRange])
 
   // Show login if no API key
   if (!hasApiKey) {
@@ -383,109 +450,211 @@ function App() {
         {/* Charts Grid */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Decision Breakdown */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Decision Breakdown</CardTitle>
+          <Card className={decisionsFullscreen ? "fixed inset-4 z-50 overflow-auto" : undefined}>
+            <CardHeader
+              actions={
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={refreshDecisions}
+                    disabled={decisionsLoading}
+                    title="Refresh"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${decisionsLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setDecisionsFullscreen(!decisionsFullscreen)}
+                    title={decisionsFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                  >
+                    {decisionsFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  </Button>
+                </>
+              }
+            >
+              <CardTitle className="text-base">Decision Breakdown</CardTitle>
               <CardDescription>Distribution of validation decisions</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                config={{
-                  allow: { label: 'Allow', color: COLORS.allow },
-                  warn: { label: 'Warn', color: COLORS.warn },
-                  block: { label: 'Block', color: COLORS.block },
-                }}
-                className="h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={decisions}
-                      dataKey="count"
-                      nameKey="decision"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={2}
-                    >
-                      {decisions.map((entry) => (
-                        <Cell
-                          key={entry.decision}
-                          fill={COLORS[entry.decision as keyof typeof COLORS] || 'hsl(var(--chart-1))'}
-                        />
-                      ))}
-                    </Pie>
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              {decisionsLoading ? (
+                <div className={`${decisionsFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'} flex items-center justify-center`}>
+                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <ChartContainer
+                  config={{
+                    allow: {
+                      label: 'Allow',
+                      theme: { light: COLORS.allow.light, dark: COLORS.allow.dark }
+                    },
+                    warn: {
+                      label: 'Warn',
+                      theme: { light: COLORS.warn.light, dark: COLORS.warn.dark }
+                    },
+                    block: {
+                      label: 'Block',
+                      theme: { light: COLORS.block.light, dark: COLORS.block.dark }
+                    },
+                  }}
+                  className={decisionsFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={decisions}
+                        dataKey="count"
+                        nameKey="decision"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={2}
+                      >
+                        {decisions.map((entry) => (
+                          <Cell
+                            key={entry.decision}
+                            fill={getColor(entry.decision as keyof typeof COLORS, darkMode) || 'hsl(var(--chart-1))'}
+                          />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
             </CardContent>
           </Card>
 
           {/* Risk Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Risk Distribution</CardTitle>
+          <Card className={riskFullscreen ? "fixed inset-4 z-50 overflow-auto" : undefined}>
+            <CardHeader
+              actions={
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={refreshRisk}
+                    disabled={riskLoading}
+                    title="Refresh"
+                  >
+                    <RefreshCw className={`h-4 w-4 ${riskLoading ? 'animate-spin' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setRiskFullscreen(!riskFullscreen)}
+                    title={riskFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                  >
+                    {riskFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                  </Button>
+                </>
+              }
+            >
+              <CardTitle className="text-base">Risk Distribution</CardTitle>
               <CardDescription>Distribution by risk score buckets</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer
-                config={{
-                  count: { label: 'Count', color: 'hsl(var(--chart-1))' },
-                }}
-                className="h-[300px]"
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={riskDistribution}>
-                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                    <XAxis dataKey="riskBucket" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+              {riskLoading ? (
+                <div className={`${riskFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'} flex items-center justify-center`}>
+                  <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <ChartContainer
+                  config={{
+                    count: { label: 'Count', color: 'hsl(var(--chart-1))' },
+                  }}
+                  className={riskFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={riskDistribution}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="riskBucket" className="text-xs" />
+                      <YAxis className="text-xs" />
+                      <ChartTooltip content={<ChartTooltipContent />} />
+                      <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Timeline Chart - Full Width */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Validation Timeline</CardTitle>
+        <Card className={timelineFullscreen ? "fixed inset-4 z-50 overflow-auto" : undefined}>
+          <CardHeader
+            actions={
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={refreshTimeline}
+                  disabled={timelineLoading}
+                  title="Refresh"
+                >
+                  <RefreshCw className={`h-4 w-4 ${timelineLoading ? 'animate-spin' : ''}`} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setTimelineFullscreen(!timelineFullscreen)}
+                  title={timelineFullscreen ? "Exit fullscreen" : "Fullscreen"}
+                >
+                  {timelineFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                </Button>
+              </>
+            }
+          >
+            <CardTitle className="text-base">Validation Timeline</CardTitle>
             <CardDescription>Hourly breakdown of decisions over time</CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={{
-                allow: { label: 'Allow', color: COLORS.allow },
-                warn: { label: 'Warn', color: COLORS.warn },
-                block: { label: 'Block', color: COLORS.block },
-              }}
-              className="h-[350px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={timeline}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis
-                    dataKey="hour"
-                    className="text-xs"
-                    tickFormatter={(value) => {
-                      const date = new Date(value)
-                      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' })
-                    }}
-                  />
-                  <YAxis className="text-xs" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                  <Line type="monotone" dataKey="allow" stroke={COLORS.allow} strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="warn" stroke={COLORS.warn} strokeWidth={2} dot={false} />
-                  <Line type="monotone" dataKey="block" stroke={COLORS.block} strokeWidth={2} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            {timelineLoading ? (
+              <div className={`${timelineFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[350px]'} flex items-center justify-center`}>
+                <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <ChartContainer
+                config={{
+                  allow: {
+                    label: 'Allow',
+                    theme: { light: COLORS.allow.light, dark: COLORS.allow.dark }
+                  },
+                  warn: {
+                    label: 'Warn',
+                    theme: { light: COLORS.warn.light, dark: COLORS.warn.dark }
+                  },
+                  block: {
+                    label: 'Block',
+                    theme: { light: COLORS.block.light, dark: COLORS.block.dark }
+                  },
+                }}
+                className={timelineFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[350px]'}
+              >
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={timeline}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis
+                      dataKey="hour"
+                      className="text-xs"
+                      tickFormatter={(value) => {
+                        const date = new Date(value)
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit' })
+                      }}
+                    />
+                    <YAxis className="text-xs" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Legend />
+                    <Line type="monotone" dataKey="allow" stroke={getColor('allow', darkMode)} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="warn" stroke={getColor('warn', darkMode)} strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="block" stroke={getColor('block', darkMode)} strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </ChartContainer>
+            )}
           </CardContent>
         </Card>
 

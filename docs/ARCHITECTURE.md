@@ -789,68 +789,118 @@ Analytics (async):   ~0.3ms (non-blocking)
 ### Scoring Philosophy
 
 **Goals**:
-1. **Layered defense**: Multiple signals, not single point of failure
-2. **Weighted importance**: Patterns > Entropy > Domain
-3. **Graceful degradation**: Missing signals don't break system
-4. **Tunable**: Easy threshold adjustment
+1. **Prevent Double-Counting**: Same fraud signal shouldn't be scored multiple times
+2. **Layered Defense**: Multiple independent signals provide redundancy
+3. **High-Confidence Priority**: Most accurate detectors get highest weight
+4. **Tunable**: Easy threshold adjustment based on production data
+5. **Explainable**: Clear reason for every decision
 
 **Non-Goals**:
 - Perfect accuracy (impossible)
 - Zero false positives (impractical)
 - Real-time learning (requires infrastructure)
 
+### Current Weights (v1.4.0)
+
+```typescript
+riskWeights: {
+  entropy:           0.05,  // 5%  - Baseline for randomness
+  domainReputation:  0.15,  // 15% - Disposable domain detection (71,751 domains)
+  tldRisk:           0.15,  // 15% - TLD risk profiling (142 TLDs)
+  patternDetection:  0.30,  // 30% - 5 pattern detectors combined
+  markovChain:       0.35,  // 35% - Highest accuracy (98%)
+}
+// Total: 1.00 (100%)
+```
+
+### Hybrid Scoring Strategy
+
+**Key Innovation**: Prevents double-counting by using different aggregation methods:
+
+```typescript
+// Domain signals (independent) → ADDITIVE
+const domainRisk = domainReputationScore * 0.15;
+const tldRisk = tldRiskScore * 0.15;
+const domainBasedRisk = domainRisk + tldRisk;  // Can have both
+
+// Local part signals (overlapping) → MAX-BASED
+const entropyRisk = entropyScore * 0.05;
+const patternRisk = patternScore * 0.30;
+const markovRisk = markovScore * 0.35;
+const localPartRisk = Math.max(entropyRisk, patternRisk, markovRisk);  // Take highest
+
+// Combine
+riskScore = Math.min(domainBasedRisk + localPartRisk, 1.0);
+```
+
+**Why This Works**:
+- Domain + TLD analyze **different properties** → can both be high → add them
+- Pattern + Markov analyze **same data** (local part) → take highest to avoid double-counting
+
+**Example**:
+```
+Email: user123@tempmail.tk
+
+Old (additive): 0.95 (disposable) + 0.15 (TLD) + 0.27 (pattern) + 0.31 (markov) = 1.68 (capped to 1.0)
+New (hybrid):   [0.15 (disposable) + 0.15 (TLD)] + max(0.27, 0.31) = 0.30 + 0.31 = 0.61
+
+Result: More accurate, less double-counting
+```
+
 ### Weight Rationale
 
-**Entropy (20%)**:
-- **Why**: Strong signal for random/generated strings
-- **Limitation**: Can flag legitimate random usernames
-- **Trade-off**: 20% prevents over-reliance
+**Entropy (5%)**:
+- **Why**: Baseline randomness detection
+- **Limitation**: High false positives on legitimate random usernames
+- **Role**: Safety net, lowest weight
 
-**Domain Reputation (10%)**:
-- **Why**: Disposable domains are strong negative signal
+**Domain Reputation (15%)**:
+- **Why**: 71,751 known disposable domains in KV
 - **Limitation**: Many legitimate domains have no reputation
-- **Trade-off**: Reduced from 15% in favor of TLD
+- **Update**: Dynamic list updated every 6 hours via cron
 
-**TLD Risk (10%)**:
-- **Why**: Free TLDs (.tk, .ml) heavily abused
-- **Limitation**: Some legitimate use of cheap TLDs
-- **Trade-off**: New in Phase 6A, conservative weight
+**TLD Risk (15%)**:
+- **Why**: 142 TLDs categorized (trusted, standard, suspicious, high-risk)
+- **Coverage**: 95% of all signups
+- **Update**: Manual sync, profiles stored in KV
 
-**Patterns (50%)**:
-- **Why**: Multiple pattern types provide strong evidence
-- **Limitation**: Sophisticated attackers can avoid patterns
-- **Trade-off**: Highest weight because of low false positives
+**Pattern Detection (30%)**:
+- **Why**: 5 detectors (sequential, dated, plus, keyboard, gibberish), 94% avg accuracy
+- **Combination**: Uses MAX of all 5 pattern scores
+- **Trade-off**: Reduced from 40% to avoid over-weighting vs Markov
+
+**Markov Chain (35%)**:
+- **Why**: Highest accuracy (98%), research-backed (Bergholz et al. 2008)
+- **Training**: Learns from production data
+- **Trade-off**: Highest weight for most reliable signal
 
 ### Threshold Tuning
 
 **Conservative** (minimize false positives):
+```typescript
+{ block: 0.8, warn: 0.5 }
 ```
-BLOCK: 0.8
-WARN:  0.5
-```
-- Fewer blocks
-- More warnings
-- Lower detection rate
+- Fewer blocks, more warnings
+- Lower detection rate (~85%)
 - Higher user satisfaction
 
-**Aggressive** (maximize detection):
-```
-BLOCK: 0.5
-WARN:  0.2
-```
-- More blocks
-- Fewer warnings
-- Higher detection rate
-- More false positives
-
 **Balanced** (default):
-```
-BLOCK: 0.6
-WARN:  0.3
+```typescript
+{ block: 0.6, warn: 0.3 }
 ```
 - Good balance
-- ~85% detection
-- ~5% false positives
+- ~95-98% detection rate
+- ~5% false positive rate
+
+**Aggressive** (maximize detection):
+```typescript
+{ block: 0.5, warn: 0.2 }
+```
+- More blocks, fewer warnings
+- Higher detection rate (~98%)
+- More false positives (~10%)
+
+**See [docs/SCORING.md](./SCORING.md) for complete scoring documentation with examples.**
 
 ---
 

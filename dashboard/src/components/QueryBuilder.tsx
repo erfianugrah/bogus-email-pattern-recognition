@@ -23,13 +23,13 @@ export function QueryBuilder() {
   const [result, setResult] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [hours, setHours] = useState(24)
 
   const runQuery = async () => {
     try {
       setLoading(true)
       setError(null)
-      const response = await query(sql, hours)
+      // Use 24 hours as default for query context
+      const response = await query(sql, 24)
       setResult(response.data || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run query')

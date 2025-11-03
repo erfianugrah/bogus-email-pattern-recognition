@@ -10,6 +10,9 @@ import { getConfig, saveConfig, clearConfigCache, DEFAULT_CONFIG, validateConfig
 import type { FraudDetectionConfig } from '../config';
 import { retrainMarkovModels } from '../training/online-learning';
 import { logger } from '../logger';
+import { updateDisposableDomains, getDisposableDomainMetadata, clearDomainCache } from '../services/disposable-domain-updater';
+import { updateTLDRiskProfiles, getTLDRiskMetadata, clearTLDCache, getTLDRiskProfile, updateSingleTLDProfile } from '../services/tld-risk-updater';
+import { getAllTLDProfiles, getTLDStats } from '../detectors/tld-risk';
 
 const admin = new Hono<{ Bindings: Env }>();
 
@@ -775,6 +778,388 @@ admin.get('/markov/history', async (c) => {
 			500
 		);
 	}
+});
+
+/**
+ * GET /admin/disposable-domains/metadata
+ * Get metadata about the disposable domains list
+ *
+ * Returns:
+ * - Total count of domains
+ * - Last updated timestamp
+ * - Version
+ * - Data sources
+ */
+admin.get('/disposable-domains/metadata', async (c) => {
+	try {
+		if (!c.env.DISPOSABLE_DOMAINS_LIST) {
+			return c.json(
+				{
+					error: 'DISPOSABLE_DOMAINS_LIST KV namespace not configured',
+					message: 'Add DISPOSABLE_DOMAINS_LIST binding to wrangler.jsonc',
+				},
+				503
+			);
+		}
+
+		const metadata = await getDisposableDomainMetadata(c.env.DISPOSABLE_DOMAINS_LIST);
+
+		if (!metadata) {
+			return c.json(
+				{
+					success: false,
+					message: 'No disposable domain data found',
+					note: 'Trigger update via POST /admin/disposable-domains/update',
+				},
+				404
+			);
+		}
+
+		return c.json({
+			success: true,
+			metadata,
+		});
+	} catch (error) {
+		return c.json(
+			{
+				error: 'Failed to get disposable domain metadata',
+				message: error instanceof Error ? error.message : 'Unknown error',
+			},
+			500
+		);
+	}
+});
+
+/**
+ * POST /admin/disposable-domains/update
+ * Manually trigger disposable domain list update from external sources
+ *
+ * This endpoint:
+ * 1. Fetches latest domains from GitHub (disposable-email-domains)
+ * 2. Merges with existing hardcoded domains
+ * 3. Stores in KV with metadata
+ * 4. Clears the domain cache
+ *
+ * Returns update result with domain count and timestamp
+ */
+admin.post('/disposable-domains/update', async (c) => {
+	try {
+		if (!c.env.DISPOSABLE_DOMAINS_LIST) {
+			return c.json(
+				{
+					error: 'DISPOSABLE_DOMAINS_LIST KV namespace not configured',
+					message: 'Add DISPOSABLE_DOMAINS_LIST binding to wrangler.jsonc',
+				},
+				503
+			);
+		}
+
+		logger.info({
+			event: 'manual_disposable_domains_update',
+			source: 'admin_api',
+		}, 'Manual disposable domain update triggered via admin API');
+
+		const result = await updateDisposableDomains(c.env.DISPOSABLE_DOMAINS_LIST);
+
+		// Clear the cache to force reload on next validation
+		clearDomainCache();
+
+		if (result.success) {
+			return c.json({
+				success: true,
+				message: 'Disposable domains updated successfully',
+				result,
+			});
+		} else {
+			return c.json(
+				{
+					success: false,
+					message: 'Failed to update disposable domains',
+					error: result.error,
+					result,
+				},
+				500
+			);
+		}
+	} catch (error) {
+		logger.error({
+			event: 'disposable_domains_update_error',
+			error: error instanceof Error ? {
+				message: error.message,
+				stack: error.stack,
+			} : String(error),
+		}, 'Disposable domain update failed');
+
+		return c.json(
+			{
+				error: 'Update failed',
+				message: error instanceof Error ? error.message : 'Unknown error',
+			},
+			500
+		);
+	}
+});
+
+/**
+ * DELETE /admin/disposable-domains/cache
+ * Clear the disposable domain cache (force reload on next request)
+ */
+admin.delete('/disposable-domains/cache', (c) => {
+	clearDomainCache();
+
+	return c.json({
+		success: true,
+		message: 'Disposable domain cache cleared',
+		note: 'Next validation will reload domains from KV',
+	});
+});
+
+/**
+ * GET /admin/tld-profiles/metadata
+ * Get metadata about TLD risk profiles
+ *
+ * Returns:
+ * - Total count of profiles
+ * - Last updated timestamp
+ * - Version
+ * - Statistics by category
+ */
+admin.get('/tld-profiles/metadata', async (c) => {
+	try {
+		if (!c.env.TLD_LIST) {
+			return c.json(
+				{
+					error: 'TLD_LIST KV namespace not configured',
+					message: 'Add TLD_LIST binding to wrangler.jsonc',
+				},
+				503
+			);
+		}
+
+		const metadata = await getTLDRiskMetadata(c.env.TLD_LIST);
+		const stats = getTLDStats();
+
+		if (!metadata) {
+			return c.json(
+				{
+					success: false,
+					message: 'No TLD risk profiles found in KV',
+					note: 'Sync hardcoded profiles via POST /admin/tld-profiles/sync',
+					hardcodedStats: stats,
+				},
+				404
+			);
+		}
+
+		return c.json({
+			success: true,
+			metadata,
+			stats,
+		});
+	} catch (error) {
+		return c.json(
+			{
+				error: 'Failed to get TLD profile metadata',
+				message: error instanceof Error ? error.message : 'Unknown error',
+			},
+			500
+		);
+	}
+});
+
+/**
+ * POST /admin/tld-profiles/sync
+ * Sync hardcoded TLD risk profiles to KV
+ *
+ * This initializes or updates the KV store with the 142 hardcoded TLD profiles.
+ * Use this to:
+ * - Initialize TLD_LIST KV for the first time
+ * - Reset profiles to defaults
+ * - Update after code changes to risk profiles
+ */
+admin.post('/tld-profiles/sync', async (c) => {
+	try {
+		if (!c.env.TLD_LIST) {
+			return c.json(
+				{
+					error: 'TLD_LIST KV namespace not configured',
+					message: 'Add TLD_LIST binding to wrangler.jsonc',
+				},
+				503
+			);
+		}
+
+		logger.info({
+			event: 'tld_profiles_sync_triggered',
+			source: 'admin_api',
+		}, 'TLD profiles sync triggered via admin API');
+
+		// Get hardcoded profiles
+		const profiles = getAllTLDProfiles();
+
+		// Update KV
+		const result = await updateTLDRiskProfiles(c.env.TLD_LIST, profiles);
+
+		if (result.success) {
+			return c.json({
+				success: true,
+				message: 'TLD risk profiles synced successfully',
+				result,
+				stats: getTLDStats(),
+			});
+		} else {
+			return c.json(
+				{
+					success: false,
+					message: 'Failed to sync TLD profiles',
+					error: result.error,
+					result,
+				},
+				500
+			);
+		}
+	} catch (error) {
+		logger.error({
+			event: 'tld_profiles_sync_error',
+			error: error instanceof Error ? {
+				message: error.message,
+				stack: error.stack,
+			} : String(error),
+		}, 'TLD profiles sync failed');
+
+		return c.json(
+			{
+				error: 'Sync failed',
+				message: error instanceof Error ? error.message : 'Unknown error',
+			},
+			500
+		);
+	}
+});
+
+/**
+ * GET /admin/tld-profiles/:tld
+ * Get a single TLD risk profile
+ */
+admin.get('/tld-profiles/:tld', async (c) => {
+	try {
+		if (!c.env.TLD_LIST) {
+			return c.json(
+				{
+					error: 'TLD_LIST KV namespace not configured',
+				},
+				503
+			);
+		}
+
+		const tld = c.req.param('tld').toLowerCase();
+		const profile = await getTLDRiskProfile(c.env.TLD_LIST, tld);
+
+		if (!profile) {
+			return c.json(
+				{
+					error: 'TLD profile not found',
+					tld,
+				},
+				404
+			);
+		}
+
+		return c.json({
+			success: true,
+			profile,
+		});
+	} catch (error) {
+		return c.json(
+			{
+				error: 'Failed to get TLD profile',
+				message: error instanceof Error ? error.message : 'Unknown error',
+			},
+			500
+		);
+	}
+});
+
+/**
+ * PUT /admin/tld-profiles/:tld
+ * Update a single TLD risk profile
+ *
+ * Body: Partial TLD risk profile (any field except 'tld')
+ * Example:
+ * {
+ *   "riskMultiplier": 1.5,
+ *   "category": "suspicious"
+ * }
+ */
+admin.put('/tld-profiles/:tld', async (c) => {
+	try {
+		if (!c.env.TLD_LIST) {
+			return c.json(
+				{
+					error: 'TLD_LIST KV namespace not configured',
+				},
+				503
+			);
+		}
+
+		const tld = c.req.param('tld').toLowerCase();
+		const updates = await c.req.json();
+
+		logger.info({
+			event: 'tld_profile_update_triggered',
+			tld,
+			updates,
+		}, `Updating TLD profile: ${tld}`);
+
+		const result = await updateSingleTLDProfile(c.env.TLD_LIST, tld, updates);
+
+		if (result.success) {
+			return c.json({
+				success: true,
+				message: `TLD profile updated: ${tld}`,
+				result,
+			});
+		} else {
+			return c.json(
+				{
+					success: false,
+					message: 'Failed to update TLD profile',
+					error: result.error,
+				},
+				500
+			);
+		}
+	} catch (error) {
+		logger.error({
+			event: 'tld_profile_update_error',
+			error: error instanceof Error ? {
+				message: error.message,
+				stack: error.stack,
+			} : String(error),
+		}, 'TLD profile update failed');
+
+		return c.json(
+			{
+				error: 'Update failed',
+				message: error instanceof Error ? error.message : 'Unknown error',
+			},
+			500
+		);
+	}
+});
+
+/**
+ * DELETE /admin/tld-profiles/cache
+ * Clear the TLD profile cache (force reload on next request)
+ */
+admin.delete('/tld-profiles/cache', (c) => {
+	clearTLDCache();
+
+	return c.json({
+		success: true,
+		message: 'TLD profile cache cleared',
+		note: 'Next validation will reload profiles from KV',
+	});
 });
 
 export default admin;

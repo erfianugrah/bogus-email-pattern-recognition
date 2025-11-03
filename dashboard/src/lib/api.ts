@@ -25,13 +25,17 @@ export interface QueryResult {
 
 // Helper to build time filter WHERE clause
 function buildTimeFilter(hours: number): string {
-  return hours === 0 ? '' : `WHERE timestamp >= NOW() - INTERVAL '${hours}' HOUR`;
+  // For "all time", use a condition that's always true (6 months = ~4320 hours)
+  return hours === 0
+    ? `WHERE timestamp >= NOW() - INTERVAL '4320' HOUR`
+    : `WHERE timestamp >= NOW() - INTERVAL '${hours}' HOUR`;
 }
 
 // Helper to build time filter for queries with additional AND conditions
 function buildTimeFilterWith(hours: number, condition: string): string {
   if (hours === 0) {
-    return `WHERE ${condition}`;
+    // For "all time", query last 6 months (Analytics Engine default retention)
+    return `WHERE timestamp >= NOW() - INTERVAL '4320' HOUR AND ${condition}`;
   }
   return `WHERE timestamp >= NOW() - INTERVAL '${hours}' HOUR AND ${condition}`;
 }
@@ -79,11 +83,11 @@ export async function loadStats(hours: number = 24): Promise<Stats> {
     GROUP BY decision
   `, hours);
 
-  // Get averages separately
+  // Get averages separately using weighted average
   const avgsResult = await query(`
     SELECT
-      AVG(double1) as avg_risk,
-      AVG(double5) as avg_latency
+      SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk,
+      SUM(_sample_interval * double5) / SUM(_sample_interval) as avg_latency
     FROM ANALYTICS
     ${buildTimeFilter(hours)}
   `, hours);
@@ -411,7 +415,10 @@ export async function loadASNs(hours: number = 24) {
 
 export async function loadTLDRiskScores(hours: number = 24) {
   const result = await query(`
-    SELECT blob6 as tld, AVG(double6) as avg_risk, SUM(_sample_interval) as count
+    SELECT
+      blob6 as tld,
+      SUM(_sample_interval * double6) / SUM(_sample_interval) as avg_risk,
+      SUM(_sample_interval) as count
     FROM ANALYTICS
     ${buildTimeFilter(hours)}
     GROUP BY tld
@@ -423,7 +430,10 @@ export async function loadTLDRiskScores(hours: number = 24) {
 
 export async function loadDomainReputation(hours: number = 24) {
   const result = await query(`
-    SELECT blob5 as domain, AVG(double7) as avg_reputation, SUM(_sample_interval) as count
+    SELECT
+      blob5 as domain,
+      SUM(_sample_interval * double7) / SUM(_sample_interval) as avg_reputation,
+      SUM(_sample_interval) as count
     FROM ANALYTICS
     ${buildTimeFilter(hours)}
     GROUP BY domain

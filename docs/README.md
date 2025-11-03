@@ -15,6 +15,7 @@
 | **[API Reference](API.md)** | Endpoints, request/response formats | API Users |
 | **[Architecture](ARCHITECTURE.md)** | System design and algorithms | Developers, Architects |
 | **[Detectors](DETECTORS.md)** | Complete guide to all 8 fraud detectors | Developers, Data Scientists |
+| **[Risk Scoring](SCORING.md)** | Complete scoring system with examples | Developers, Analysts |
 | **[Configuration](CONFIGURATION.md)** | Configuration management via KV | DevOps |
 | **[CLI Reference](CLI.md)** | Command-line interface for all operations | Developers, DevOps |
 | **[Logging Standards](LOGGING_STANDARDS.md)** | Structured logging with Pino.js, event naming | Developers, DevOps |
@@ -52,6 +53,7 @@ docs/
 ├── API.md                         # API reference
 ├── ARCHITECTURE.md                # System design
 ├── DETECTORS.md                   # All 8 detector algorithms
+├── SCORING.md                     # Risk scoring system with examples
 ├── CONFIGURATION.md               # Config management
 ├── CLI.md                         # Command-line interface (29 commands)
 ├── LOGGING_STANDARDS.md           # Structured logging with Pino.js
@@ -77,6 +79,7 @@ docs/
 1. **[Getting Started](GETTING_STARTED.md)** - Detailed setup and development guide
 2. **[Architecture](ARCHITECTURE.md)** - Learn the system design
 3. **[Detectors](DETECTORS.md)** - Understand fraud detection algorithms
+4. **[Risk Scoring](SCORING.md)** - Complete scoring system with examples
 
 ### For API Users
 

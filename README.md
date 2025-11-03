@@ -2,25 +2,6 @@
 
 A Cloudflare Workers-based fraud detection API that identifies fraudulent email signup patterns through advanced pattern recognition, statistical analysis, and machine learning.
 
-## 🎉 Latest Updates (v1.4.0 - 2025-11-02)
-
-**Major accuracy improvements: 88-92% → 98-100% (+15-25%)**
-
-### Quick Wins Implemented
-- ✅ **Markov Confidence Gating**: Reduced false positives (+1-2% accuracy)
-- ✅ **Max-Based Scoring**: Redesigned risk calculation to prevent double-counting (+2-3% accuracy)
-- ✅ **Expanded TLD Database**: 40 → 154 TLDs (+285% coverage, +5-8% accuracy)
-
-### Priority 2 Improvements
-- ✅ **Optimized Risk Weights**: Data-driven rebalancing for max-based scoring (+2-4% accuracy)
-- ✅ **Pattern Whitelisting**: Reduces false positives on legitimate patterns (+2-3% accuracy)
-- ✅ **Multi-Language N-Gram Support**: International name detection across 7 languages (+3-5% accuracy)
-  - **60-80% reduction** in false positives on international names
-
-**See [docs/IMPROVEMENTS_2025-11-02.md](docs/IMPROVEMENTS_2025-11-02.md) for complete details**
-
----
-
 ## 🚦 Status
 
 **Production**: https://fraud.erfi.dev
@@ -55,10 +36,10 @@ A Cloudflare Workers-based fraud detection API that identifies fraudulent email 
 | Documentation | Purpose |
 |---------------|---------|
 | **[Getting Started](docs/GETTING_STARTED.md)** | Setup, installation, deployment |
-| **[Latest Improvements](docs/IMPROVEMENTS_2025-11-02.md)** | v1.4.0 details (Quick Wins + Priority 2) |
 | **[API Reference](docs/API.md)** | Endpoints, request/response formats |
 | **[Architecture](docs/ARCHITECTURE.md)** | System design and algorithms |
 | **[Detectors Guide](docs/DETECTORS.md)** | All 8 fraud detection algorithms |
+| **[Risk Scoring](docs/SCORING.md)** | Complete scoring system with examples |
 | **[CLI Documentation](cli/README.md)** | Command-line interface guide |
 | **[System Status](docs/SYSTEM_STATUS.md)** | Current deployment status |
 
@@ -213,7 +194,7 @@ Local Part Signals (Max-Based):
 - **Final score**: domain_signals + local_part_max_signal
 - **Result**: Prevents double-counting of overlapping fraud signals
 
-See [docs/IMPROVEMENTS_2025-11-02.md](docs/IMPROVEMENTS_2025-11-02.md) for optimization details.
+**See [docs/SCORING.md](docs/SCORING.md) for complete scoring documentation with detailed examples.**
 
 ---
 
@@ -343,13 +324,13 @@ WORKER_URL=https://fraud.erfi.dev npm run test:e2e
 - **[API Reference](docs/API.md)** - Complete API documentation
 - **[Architecture](docs/ARCHITECTURE.md)** - System design deep dive
 - **[Detectors Guide](docs/DETECTORS.md)** - All 8 fraud detection algorithms
+- **[Risk Scoring](docs/SCORING.md)** - Complete scoring system with examples
 - **[Configuration](docs/CONFIGURATION.md)** - Configuration management
 - **[Analytics](docs/ANALYTICS.md)** - Analytics Engine and dashboard
 - **[Integration Guide](docs/INTEGRATION_GUIDE.md)** - Integration examples
 - **[System Status](docs/SYSTEM_STATUS.md)** - Current deployment status
 
 ### Recent Updates
-- **[v1.4.0 Improvements](docs/IMPROVEMENTS_2025-11-02.md)** - Quick Wins + Priority 2
 - **[CHANGELOG](CHANGELOG.md)** - Version history
 
 ### CLI & Development
@@ -414,14 +395,11 @@ xkgh2k9qw@tempmail.com     → Risk: 0.95 (block) - Gibberish + disposable
 - ✅ All 8 detectors operational
 
 ### Next Steps
-1. **Deploy v1.4.0 to Production** (Ready now)
-2. **Monitor for 7 Days** (Validate improvements)
-3. **Priority 3 Improvements** (Optional, for 99%+ accuracy)
+1. **Monitor Production** (Validate current performance)
+2. **Continuous Improvement** (Optional enhancements for 99%+ accuracy)
    - Ensemble Markov models
    - Continuous learning pipeline
-   - A/B testing framework
-
-See [docs/IMPROVEMENTS_2025-11-02.md](docs/IMPROVEMENTS_2025-11-02.md) for detailed roadmap.
+   - Enhanced A/B testing capabilities
 
 ---
 
