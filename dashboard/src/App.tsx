@@ -42,6 +42,32 @@ const getColor = (colorKey: keyof typeof COLORS, isDark: boolean) => {
   return isDark ? COLORS[colorKey].dark : COLORS[colorKey].light
 }
 
+// Color palette for charts
+const CHART_COLORS = [
+  { dark: 'hsl(220 70% 60%)', light: 'hsl(220 70% 50%)' },  // Blue
+  { dark: 'hsl(142 70% 55%)', light: 'hsl(142 70% 45%)' },  // Green
+  { dark: 'hsl(48 80% 55%)', light: 'hsl(48 80% 50%)' },   // Yellow
+  { dark: 'hsl(270 70% 60%)', light: 'hsl(270 70% 50%)' },  // Purple
+  { dark: 'hsl(30 80% 55%)', light: 'hsl(30 80% 50%)' },   // Orange
+  { dark: 'hsl(330 80% 60%)', light: 'hsl(330 80% 55%)' },  // Magenta
+  { dark: 'hsl(190 70% 55%)', light: 'hsl(190 70% 50%)' },  // Cyan
+  { dark: 'hsl(100 70% 55%)', light: 'hsl(100 70% 50%)' },  // Lime
+]
+
+// Dynamic color getter by index
+const getChartColor = (index: number, isDark: boolean): string => {
+  const colorPair = CHART_COLORS[index % CHART_COLORS.length]
+  return isDark ? colorPair.dark : colorPair.light
+}
+
+// Risk-based color getter (for Risk Distribution chart)
+const getRiskColor = (bucket: string, isDark: boolean): string => {
+  const b = bucket.toLowerCase()
+  if (b.includes('high')) return isDark ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
+  if (b.includes('medium')) return isDark ? 'hsl(48 80% 55%)' : 'hsl(48 80% 50%)'
+  return isDark ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
+}
+
 function App() {
   const [timeRange, setTimeRange] = useState<number>(24)
   const [stats, setStats] = useState<Stats | null>(null)
@@ -628,7 +654,11 @@ function App() {
                       <XAxis dataKey="riskBucket" className="text-xs" />
                       <YAxis className="text-xs" />
                       <ChartTooltip content={<ChartTooltipContent />} />
-                      <Bar dataKey="count" fill={barChartColor} radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                        {riskDistribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={getRiskColor(String(entry.riskBucket), darkMode)} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </ChartContainer>
@@ -734,6 +764,7 @@ function App() {
             dataKey="count"
             nameKey="country"
             isDark={darkMode}
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -762,7 +793,17 @@ function App() {
             nameKey="reason"
             isDark={darkMode}
             color="hsl(var(--chart-3))"
-            getBarColor={() => darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'}
+            getBarColor={(entry) => {
+              const reason = String(entry.reason).toLowerCase()
+              if (reason.includes('keyboard')) return darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'
+              if (reason.includes('sequential')) return darkMode ? 'hsl(270 70% 60%)' : 'hsl(270 70% 55%)'
+              if (reason.includes('gibberish')) return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
+              if (reason.includes('disposable')) return darkMode ? 'hsl(15 70% 55%)' : 'hsl(15 70% 50%)'
+              if (reason.includes('plus')) return darkMode ? 'hsl(48 80% 55%)' : 'hsl(48 80% 50%)'
+              if (reason.includes('tld')) return darkMode ? 'hsl(10 80% 55%)' : 'hsl(10 80% 50%)'
+              if (reason.includes('markov')) return darkMode ? 'hsl(330 80% 60%)' : 'hsl(330 80% 55%)'
+              return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
+            }}
           />
 
           <SimpleBarChart
@@ -773,6 +814,7 @@ function App() {
             nameKey="domain"
             isDark={darkMode}
             color="hsl(var(--chart-4))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -783,6 +825,7 @@ function App() {
             nameKey="tld"
             isDark={darkMode}
             color="hsl(var(--chart-5))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -793,6 +836,7 @@ function App() {
             nameKey="family"
             isDark={darkMode}
             color="hsl(var(--chart-1))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -803,7 +847,7 @@ function App() {
             nameKey="domain"
             isDark={darkMode}
             color="hsl(var(--chart-2))"
-            getBarColor={() => darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'}
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -814,6 +858,7 @@ function App() {
             nameKey="domain"
             isDark={darkMode}
             color="hsl(var(--chart-3))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -824,6 +869,7 @@ function App() {
             nameKey="domain"
             isDark={darkMode}
             color="hsl(var(--chart-4))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -834,6 +880,7 @@ function App() {
             nameKey="type"
             isDark={darkMode}
             color="hsl(var(--chart-5))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -859,13 +906,7 @@ function App() {
             nameKey="bucket"
             isDark={darkMode}
             color="hsl(var(--chart-2))"
-            getBarColor={(entry) => {
-              const bucket = String(entry.bucket)
-              if (bucket.includes('4.0')) return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
-              if (bucket.includes('3.')) return darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'
-              if (bucket.includes('2.')) return darkMode ? 'hsl(50 80% 55%)' : 'hsl(50 80% 50%)'
-              return darkMode ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
-            }}
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -876,19 +917,7 @@ function App() {
             nameKey="range"
             isDark={darkMode}
             color="hsl(var(--chart-3))"
-            getBarColor={(entry) => {
-              const range = String(entry.range)
-              if (range.includes('0.8') || range.includes('0.9') || range.includes('1.0')) {
-                return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
-              }
-              if (range.includes('0.6') || range.includes('0.7')) {
-                return darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'
-              }
-              if (range.includes('0.4') || range.includes('0.5')) {
-                return darkMode ? 'hsl(50 80% 55%)' : 'hsl(50 80% 50%)'
-              }
-              return darkMode ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
-            }}
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -899,6 +928,7 @@ function App() {
             nameKey="range"
             isDark={darkMode}
             color="hsl(var(--chart-4))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -909,6 +939,7 @@ function App() {
             nameKey="asn"
             isDark={darkMode}
             color="hsl(var(--chart-5))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -919,6 +950,7 @@ function App() {
             nameKey="tld"
             isDark={darkMode}
             color="hsl(var(--chart-1))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -929,6 +961,7 @@ function App() {
             nameKey="domain"
             isDark={darkMode}
             color="hsl(var(--chart-2))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
 
           <SimpleBarChart
@@ -939,6 +972,7 @@ function App() {
             nameKey="range"
             isDark={darkMode}
             color="hsl(var(--chart-3))"
+            getBarColor={(_, index) => getChartColor(index, darkMode)}
           />
         </div>
           </TabsContent>
