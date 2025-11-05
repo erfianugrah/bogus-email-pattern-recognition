@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { query } from '@/lib/api'
-import { Search, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { Search, Download, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from 'lucide-react'
 
 const VIEWS = {
   recent: {
@@ -183,6 +183,9 @@ export function DataExplorer() {
   const [error, setError] = useState<string | null>(null)
   const [sortColumn, setSortColumn] = useState<string | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const [refreshInterval, setRefreshInterval] = useState('30')
+  const intervalRef = useRef<number | null>(null)
 
   const explore = async () => {
     try {
@@ -211,6 +214,34 @@ export function DataExplorer() {
       setLoading(false)
     }
   }
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (autoRefresh && result.length > 0) {
+      const seconds = parseInt(refreshInterval)
+      intervalRef.current = window.setInterval(() => {
+        explore()
+      }, seconds * 1000)
+    } else if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [autoRefresh, refreshInterval, result.length])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+    }
+  }, [])
 
   const exportToCSV = () => {
     if (!result.length) return
@@ -338,6 +369,10 @@ export function DataExplorer() {
 
           {result.length > 0 && (
             <>
+              <Button variant="outline" onClick={explore} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
               <Button variant="outline" onClick={exportToCSV}>
                 <Download className="h-4 w-4 mr-2" />
                 CSV
@@ -350,6 +385,33 @@ export function DataExplorer() {
           )}
         </div>
 
+        {result.length > 0 && (
+          <div className="flex gap-3 items-center p-3 bg-muted/30 rounded-md border">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <span className="text-sm font-medium">Auto-refresh</span>
+            </label>
+            {autoRefresh && (
+              <Select value={refreshInterval} onValueChange={setRefreshInterval}>
+                <SelectTrigger className="w-[140px] h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">Every 10 sec</SelectItem>
+                  <SelectItem value="30">Every 30 sec</SelectItem>
+                  <SelectItem value="60">Every 1 min</SelectItem>
+                  <SelectItem value="300">Every 5 min</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        )}
+
         {error && (
           <div className="p-4 border border-destructive rounded-md bg-destructive/10">
             <p className="text-sm text-destructive">{error}</p>
@@ -360,12 +422,12 @@ export function DataExplorer() {
           <div className="border rounded-md overflow-hidden">
             <div className="overflow-x-auto max-h-[700px] overflow-y-auto">
               <table className="w-full text-sm min-w-max">
-                <thead className="bg-muted sticky top-0">
+                <thead className="sticky top-0 z-10">
                   <tr>
                     {Object.keys(result[0]).map((key) => (
                       <th
                         key={key}
-                        className="px-4 py-2 text-left font-medium whitespace-nowrap cursor-pointer hover:bg-muted-foreground/10 select-none"
+                        className="px-4 py-2 text-left font-medium whitespace-nowrap cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 select-none bg-gray-100 dark:bg-gray-900 border-b border-border opacity-100"
                         onClick={() => handleSort(key)}
                       >
                         <div className="flex items-center gap-1">
