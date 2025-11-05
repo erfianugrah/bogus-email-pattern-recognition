@@ -165,8 +165,8 @@ export async function retrainMarkovModels(env: Env): Promise<TrainingResult> {
 			}, 'Anomaly check passed');
 
 			// 6. Load current production models
-			const productionLegitModel = await safeLoadModel(env, 'MM_legit_production');
-			const productionFraudModel = await safeLoadModel(env, 'MM_fraud_production');
+			const productionLegitModel = await safeLoadModel(env, 'MM_legit_2gram');
+			const productionFraudModel = await safeLoadModel(env, 'MM_fraud_2gram');
 
 			// 7. Train new models (incremental update from production)
 			const { legitimateModel: newLegitModel, fraudulentModel: newFraudModel } = await trainModel(
@@ -206,8 +206,8 @@ export async function retrainMarkovModels(env: Env): Promise<TrainingResult> {
 				improvement: validation.improvement,
 			}, `Model validation passed: accuracy=${(validation.accuracy * 100).toFixed(1)}%`);
 
-			// 9. Save as candidate models (0% traffic initially)
-			await saveModelsAsCandidate(env, newLegitModel, newFraudModel, {
+			// 9. Save models to production (with backup of old models)
+			await saveModelsToProduction(env, newLegitModel, newFraudModel, {
 				version: newVersion,
 				fraud_count: fraudSamples.length,
 				legit_count: legitSamples.length,
@@ -223,15 +223,11 @@ export async function retrainMarkovModels(env: Env): Promise<TrainingResult> {
 				duration_ms: Date.now() - startTime,
 				validation,
 				anomaly_score: anomalyCheck.score,
-				action: 'created_candidate'
+				action: 'deployed_to_production'
 			});
 
-			// 11. Auto-promote to canary if enabled (Phase 3 feature)
-			let status = 'candidate';
-			if (env.AUTO_PROMOTE_TO_CANARY === 'true' && anomalyCheck.score < 0.2) {
-				// Future: implement auto-promotion
-				status = 'candidate_awaiting_manual_promotion';
-			}
+			// 11. Models are now live in production
+			let status = 'production';
 
 			logger.info({
 				event: 'online_learning_completed',
@@ -375,22 +371,40 @@ async function trainModel(
 	const fraudulentModel = new DynamicMarkovChain();
 
 	// Train LEGITIMATE model on legitimate samples ONLY
+	// Use adaptationRate=-Infinity to disable adaptive skipping (train on ALL samples)
 	logger.info({
 		event: 'training_legit_model',
 		sample_count: legitSamples.length,
 	}, 'Training legitimate model');
+	let legitTrained = 0;
 	for (const email of legitSamples) {
-		legitimateModel.train(email);
+		if (legitimateModel.train(email, -Infinity)) {
+			legitTrained++;
+		}
 	}
+	logger.info({
+		event: 'legit_training_complete',
+		samples_trained: legitTrained,
+		samples_total: legitSamples.length,
+	}, `Trained on ${legitTrained}/${legitSamples.length} legitimate samples`);
 
 	// Train FRAUDULENT model on fraudulent samples ONLY
+	// Use adaptationRate=-Infinity to disable adaptive skipping (train on ALL samples)
 	logger.info({
 		event: 'training_fraud_model',
 		sample_count: fraudSamples.length,
 	}, 'Training fraudulent model');
+	let fraudTrained = 0;
 	for (const email of fraudSamples) {
-		fraudulentModel.train(email);
+		if (fraudulentModel.train(email, -Infinity)) {
+			fraudTrained++;
+		}
 	}
+	logger.info({
+		event: 'fraud_training_complete',
+		samples_trained: fraudTrained,
+		samples_total: fraudSamples.length,
+	}, `Trained on ${fraudTrained}/${fraudSamples.length} fraudulent samples`);
 
 	// If there are existing models, blend with incremental learning
 	if (existingModels?.legit && existingModels?.fraud) {
@@ -629,6 +643,103 @@ async function saveModelsAsCandidate(
 		legit_bytes: legitJSON.length,
 		fraud_bytes: fraudJSON.length,
 	}, 'Models saved as candidate');
+}
+
+/**
+ * Save models to production (replaces current production models)
+ * Uses production key format: MM_legit_2gram, MM_fraud_2gram
+ * Creates backup before replacing
+ */
+async function saveModelsToProduction(
+	env: Env,
+	legitimateModel: DynamicMarkovChain,
+	fraudulentModel: DynamicMarkovChain,
+	metadata: {
+		version: string;
+		fraud_count: number;
+		legit_count: number;
+		validation: ValidationMetrics;
+		anomaly_score: number;
+	}
+): Promise<void> {
+
+	if (!env.MARKOV_MODEL) {
+		throw new Error('MARKOV_MODEL KV namespace not configured');
+	}
+
+	// 1. Create backup of existing production models
+	const existingLegit = await env.MARKOV_MODEL.get('MM_legit_2gram', 'text');
+	const existingFraud = await env.MARKOV_MODEL.get('MM_fraud_2gram', 'text');
+
+	if (existingLegit) {
+		await env.MARKOV_MODEL.put('MM_legit_2gram_backup', existingLegit, {
+			metadata: {
+				backup_timestamp: new Date().toISOString(),
+				reason: 'automated_training_update'
+			}
+		});
+	}
+
+	if (existingFraud) {
+		await env.MARKOV_MODEL.put('MM_fraud_2gram_backup', existingFraud, {
+			metadata: {
+				backup_timestamp: new Date().toISOString(),
+				reason: 'automated_training_update'
+			}
+		});
+	}
+
+	// 2. Save new production models
+	const legitJSON = JSON.stringify(legitimateModel.toJSON());
+	const legitChecksum = await computeSHA256(legitJSON);
+
+	await env.MARKOV_MODEL.put('MM_legit_2gram', legitJSON, {
+		metadata: {
+			full_version: metadata.version,
+			model_type: 'legitimate',
+			status: 'production',
+			deployed_at: new Date().toISOString(),
+			fraud_count: metadata.fraud_count,
+			legit_count: metadata.legit_count,
+			accuracy: metadata.validation.accuracy,
+			detection_rate: metadata.validation.detection_rate,
+			false_positive_rate: metadata.validation.false_positive_rate,
+			anomaly_score: metadata.anomaly_score,
+			checksum: legitChecksum,
+			size_bytes: legitJSON.length
+		}
+	});
+
+	const fraudJSON = JSON.stringify(fraudulentModel.toJSON());
+	const fraudChecksum = await computeSHA256(fraudJSON);
+
+	await env.MARKOV_MODEL.put('MM_fraud_2gram', fraudJSON, {
+		metadata: {
+			full_version: metadata.version,
+			model_type: 'fraudulent',
+			status: 'production',
+			deployed_at: new Date().toISOString(),
+			fraud_count: metadata.fraud_count,
+			legit_count: metadata.legit_count,
+			accuracy: metadata.validation.accuracy,
+			detection_rate: metadata.validation.detection_rate,
+			false_positive_rate: metadata.validation.false_positive_rate,
+			anomaly_score: metadata.anomaly_score,
+			checksum: fraudChecksum,
+			size_bytes: fraudJSON.length
+		}
+	});
+
+	logger.info({
+		event: 'production_models_updated',
+		version: metadata.version,
+		legit_checksum: legitChecksum.slice(0, 16),
+		fraud_checksum: fraudChecksum.slice(0, 16),
+		legit_bytes: legitJSON.length,
+		fraud_bytes: fraudJSON.length,
+		fraud_count: metadata.fraud_count,
+		legit_count: metadata.legit_count,
+	}, 'Models deployed to production');
 }
 
 /**
