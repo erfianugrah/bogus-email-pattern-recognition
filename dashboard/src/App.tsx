@@ -89,7 +89,7 @@ function App() {
   const [decisionsFullscreen, setDecisionsFullscreen] = useState(false)
   const [riskFullscreen, setRiskFullscreen] = useState(false)
   const [timelineFullscreen, setTimelineFullscreen] = useState(false)
-  const [chartKey, setChartKey] = useState(0)
+  const [activeTab, setActiveTab] = useState('overview')
 
   // Get computed chart colors for bars (CSS variables don't work in Recharts)
   const barChartColor = useChartColor('--color-chart-1', darkMode)
@@ -117,16 +117,10 @@ function App() {
     const bgColor = getComputedStyle(document.documentElement).getPropertyValue('--color-background').trim()
     console.log('[Dark Mode] CSS variable --color-background:', bgColor)
     console.log('[Dark Mode] Body background:', getComputedStyle(document.body).backgroundColor)
-
-    // Force chart re-render when theme changes
-    setChartKey(prev => prev + 1)
   }, [darkMode])
 
-  // Force chart re-render when fullscreen changes
-  useEffect(() => {
-    const timer = setTimeout(() => setChartKey(prev => prev + 1), 150)
-    return () => clearTimeout(timer)
-  }, [decisionsFullscreen, riskFullscreen, timelineFullscreen])
+  // Note: Removed forced chart re-render for smoother transitions
+  // ResponsiveContainer handles resize automatically
 
   useEffect(() => {
     if (!hasApiKey) {
@@ -324,7 +318,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className={`${activeTab === 'explorer' || activeTab === 'management' ? 'max-w-full' : 'max-w-7xl'} mx-auto space-y-6`}>
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -393,7 +387,7 @@ function App() {
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs defaultValue="overview" className="space-y-6" onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="query">Query Builder</TabsTrigger>
@@ -557,7 +551,7 @@ function App() {
                   }}
                   className={decisionsFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'}
                 >
-                  <ResponsiveContainer width="100%" height="100%" key={chartKey}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={decisions}
@@ -628,7 +622,7 @@ function App() {
                   }}
                   className={riskFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'}
                 >
-                  <ResponsiveContainer width="100%" height="100%" key={chartKey}>
+                  <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={riskDistribution}>
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                       <XAxis dataKey="riskBucket" className="text-xs" />
@@ -697,7 +691,7 @@ function App() {
                 }}
                 className={timelineFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[350px]'}
               >
-                <ResponsiveContainer width="100%" height="100%" key={chartKey}>
+                <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={timeline}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis
@@ -750,6 +744,14 @@ function App() {
             nameKey="patternType"
             isDark={darkMode}
             color="hsl(var(--chart-2))"
+            getBarColor={(entry) => {
+              const type = String(entry.patternType).toLowerCase()
+              if (type.includes('keyboard')) return darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'
+              if (type.includes('repeat')) return darkMode ? 'hsl(330 80% 60%)' : 'hsl(330 80% 55%)'
+              if (type.includes('sequential')) return darkMode ? 'hsl(270 70% 60%)' : 'hsl(270 70% 55%)'
+              if (type === 'none') return darkMode ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
+              return darkMode ? 'hsl(220 70% 60%)' : 'hsl(220 70% 50%)'
+            }}
           />
 
           <SimpleBarChart
@@ -760,6 +762,7 @@ function App() {
             nameKey="reason"
             isDark={darkMode}
             color="hsl(var(--chart-3))"
+            getBarColor={() => darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'}
           />
 
           <SimpleBarChart
@@ -800,6 +803,7 @@ function App() {
             nameKey="domain"
             isDark={darkMode}
             color="hsl(var(--chart-2))"
+            getBarColor={() => darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'}
           />
 
           <SimpleBarChart
@@ -840,6 +844,11 @@ function App() {
             nameKey="isGibberish"
             isDark={darkMode}
             color="hsl(var(--chart-1))"
+            getBarColor={(entry) => {
+              const val = String(entry.isGibberish).toLowerCase()
+              if (val === 'yes' || val === 'true') return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
+              return darkMode ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
+            }}
           />
 
           <SimpleBarChart
@@ -850,6 +859,13 @@ function App() {
             nameKey="bucket"
             isDark={darkMode}
             color="hsl(var(--chart-2))"
+            getBarColor={(entry) => {
+              const bucket = String(entry.bucket)
+              if (bucket.includes('4.0')) return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
+              if (bucket.includes('3.')) return darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'
+              if (bucket.includes('2.')) return darkMode ? 'hsl(50 80% 55%)' : 'hsl(50 80% 50%)'
+              return darkMode ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
+            }}
           />
 
           <SimpleBarChart
@@ -860,6 +876,19 @@ function App() {
             nameKey="range"
             isDark={darkMode}
             color="hsl(var(--chart-3))"
+            getBarColor={(entry) => {
+              const range = String(entry.range)
+              if (range.includes('0.8') || range.includes('0.9') || range.includes('1.0')) {
+                return darkMode ? 'hsl(0 80% 55%)' : 'hsl(0 80% 50%)'
+              }
+              if (range.includes('0.6') || range.includes('0.7')) {
+                return darkMode ? 'hsl(30 80% 55%)' : 'hsl(30 80% 50%)'
+              }
+              if (range.includes('0.4') || range.includes('0.5')) {
+                return darkMode ? 'hsl(50 80% 55%)' : 'hsl(50 80% 50%)'
+              }
+              return darkMode ? 'hsl(142 70% 50%)' : 'hsl(142 70% 45%)'
+            }}
           />
 
           <SimpleBarChart

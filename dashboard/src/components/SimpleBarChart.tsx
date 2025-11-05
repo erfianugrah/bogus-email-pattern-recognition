@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts'
 import { Button } from '@/components/ui/button'
 import { RefreshCw, Maximize2, Minimize2 } from 'lucide-react'
 
@@ -15,6 +15,7 @@ interface SimpleBarChartProps {
   loading?: boolean
   onRefresh?: () => void
   isDark?: boolean
+  getBarColor?: (entry: Record<string, string | number>, index: number) => string
 }
 
 export function SimpleBarChart({
@@ -26,10 +27,10 @@ export function SimpleBarChart({
   color = 'hsl(var(--chart-1))',
   loading = false,
   onRefresh,
-  isDark = false
+  isDark = false,
+  getBarColor
 }: SimpleBarChartProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [chartKey, setChartKey] = useState(0)
   const hasData = data && data.length > 0
 
   // Compute color if it contains CSS variable
@@ -50,15 +51,7 @@ export function SimpleBarChart({
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen)
-    // Force chart re-render after delay to allow DOM to update
-    setTimeout(() => setChartKey(prev => prev + 1), 200)
   }
-
-  // Force re-render when fullscreen state changes
-  useEffect(() => {
-    const timer = setTimeout(() => setChartKey(prev => prev + 1), 200)
-    return () => clearTimeout(timer)
-  }, [isFullscreen])
 
   return (
     <>
@@ -116,13 +109,17 @@ export function SimpleBarChart({
             }}
             className={isFullscreen ? 'h-[calc(100vh-200px)]' : 'h-[300px]'}
           >
-            <ResponsiveContainer width="100%" height="100%" key={chartKey}>
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey={nameKey} className="text-xs" angle={-45} textAnchor="end" height={80} />
                 <YAxis className="text-xs" />
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <Bar dataKey={dataKey} fill={computedColor} radius={[4, 4, 0, 0]} />
+                <Bar dataKey={dataKey} fill={computedColor} radius={[4, 4, 0, 0]}>
+                  {getBarColor && data.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getBarColor(entry, index)} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
