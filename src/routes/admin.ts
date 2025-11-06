@@ -17,6 +17,44 @@ import { D1Queries, executeD1Query } from '../database/queries';
 
 const admin = new Hono<{ Bindings: Env }>();
 
+/**
+ * Validate D1 SQL query for security
+ * Only allows safe SELECT queries on the validations table
+ */
+function validateD1Query(sql: string): { valid: boolean; error?: string } {
+	const trimmed = sql.trim().toUpperCase();
+
+	// Must start with SELECT
+	if (!trimmed.startsWith('SELECT')) {
+		return { valid: false, error: 'Query must start with SELECT' };
+	}
+
+	// No semicolons (prevent multi-statement)
+	if (sql.includes(';')) {
+		return { valid: false, error: 'Multiple statements not allowed (no semicolons)' };
+	}
+
+	// No SQL comments
+	if (sql.includes('--') || sql.includes('/*')) {
+		return { valid: false, error: 'SQL comments not allowed' };
+	}
+
+	// Dangerous keywords not allowed
+	const dangerous = ['DROP', 'DELETE', 'UPDATE', 'INSERT', 'ALTER', 'CREATE', 'TRUNCATE', 'EXEC', 'EXECUTE'];
+	for (const keyword of dangerous) {
+		if (trimmed.includes(keyword)) {
+			return { valid: false, error: `Keyword '${keyword}' not allowed` };
+		}
+	}
+
+	// Must query from 'validations' table (case insensitive check)
+	if (!trimmed.includes('FROM VALIDATIONS') && !trimmed.includes('FROM\nVALIDATIONS') && !trimmed.includes('FROM\tVALIDATIONS')) {
+		return { valid: false, error: 'Query must be FROM validations table' };
+	}
+
+	return { valid: true };
+}
+
 // Apply API key authentication to all admin routes
 admin.use('/*', requireApiKey);
 
@@ -263,10 +301,11 @@ admin.get('/health', (c) => {
  * GET /admin/analytics
  * Query D1 database with analytics data
  * Query params:
- *   - type: Pre-built query type (summary, blockReasons, etc.)
+ *   - type: Pre-built query type (summary, blockReasons, etc.) - recommended
+ *   - query: Custom SQL query (validated for security) - for dashboard
  *   - hours: Number of hours to look back (default: 24)
  *
- * SECURITY: Custom SQL queries are NOT allowed to prevent SQL injection
+ * SECURITY: Custom SQL queries are validated to only allow safe SELECT queries
  * Migration Note: Now uses D1 instead of Analytics Engine
  */
 admin.get('/analytics', async (c) => {
@@ -283,46 +322,74 @@ admin.get('/analytics', async (c) => {
 		}
 
 		const hours = parseInt(c.req.query('hours') || '24', 10);
-		const queryType = c.req.query('type') || 'summary';
+		const queryType = c.req.query('type');
+		const customQuery = c.req.query('query');
 
-		// SECURITY: Only allow pre-built queries to prevent SQL injection
-		const allowedQueries: Record<string, (hours: number) => string> = {
-			summary: D1Queries.summary,
-			blockReasons: D1Queries.blockReasons,
-			riskDistribution: D1Queries.riskDistribution,
-			topCountries: D1Queries.topCountries,
-			highRisk: D1Queries.highRiskEmails,
-			performance: D1Queries.performanceMetrics,
-			timeline: D1Queries.hourlyTimeline,
-			fingerprints: D1Queries.topFingerprints,
-			disposableDomains: D1Queries.disposableDomains,
-			patternFamilies: D1Queries.patternFamilies,
-			markovStats: D1Queries.markovStats,
-		};
+		let query: string;
+		let mode: 'predefined' | 'custom' = 'predefined';
 
-		if (!allowedQueries[queryType]) {
-			return c.json(
-				{
-					error: 'Invalid query type',
-					message: `Query type '${queryType}' is not allowed. Use /admin/analytics/queries to see available types.`,
-					available: Object.keys(allowedQueries),
-				},
-				400
-			);
+		// Option 1: Use predefined query type
+		if (queryType) {
+			const allowedQueries: Record<string, (hours: number) => string> = {
+				summary: D1Queries.summary,
+				blockReasons: D1Queries.blockReasons,
+				riskDistribution: D1Queries.riskDistribution,
+				topCountries: D1Queries.topCountries,
+				highRisk: D1Queries.highRiskEmails,
+				performance: D1Queries.performanceMetrics,
+				timeline: D1Queries.hourlyTimeline,
+				fingerprints: D1Queries.topFingerprints,
+				disposableDomains: D1Queries.disposableDomains,
+				patternFamilies: D1Queries.patternFamilies,
+				markovStats: D1Queries.markovStats,
+			};
+
+			if (!allowedQueries[queryType]) {
+				return c.json(
+					{
+						error: 'Invalid query type',
+						message: `Query type '${queryType}' is not allowed. Use /admin/analytics/queries to see available types.`,
+						available: Object.keys(allowedQueries),
+					},
+					400
+				);
+			}
+
+			query = allowedQueries[queryType](hours);
 		}
+		// Option 2: Use custom SQL query (with security validation)
+		else if (customQuery) {
+			mode = 'custom';
 
-		const query = allowedQueries[queryType](hours);
+			// SECURITY: Validate custom SQL to prevent injection
+			const validation = validateD1Query(customQuery);
+			if (!validation.valid) {
+				return c.json(
+					{
+						error: 'Invalid SQL query',
+						message: validation.error,
+						hint: 'Only SELECT queries on the validations table are allowed',
+					},
+					400
+				);
+			}
+
+			query = customQuery;
+		}
+		// Default: use summary query
+		else {
+			query = D1Queries.summary(hours);
+		}
 
 		// Execute query on D1
 		const data = await executeD1Query(c.env.DB, query);
 
 		return c.json({
 			success: true,
-			queryType,
+			mode,
 			query,
 			hours,
 			data,
-			note: 'Migrated to D1 - uses pre-built queries only to prevent SQL injection',
 		});
 	} catch (error) {
 		return c.json(
