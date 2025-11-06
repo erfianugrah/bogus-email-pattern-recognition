@@ -386,7 +386,7 @@ WORKER_URL=https://your-worker.workers.dev npm run test:e2e
 - **[Detectors Guide](docs/DETECTORS.md)** - All 8 fraud detection algorithms
 - **[Risk Scoring](docs/SCORING.md)** - Complete scoring system with examples
 - **[Configuration](docs/CONFIGURATION.md)** - Configuration management
-- **[Analytics](docs/ANALYTICS.md)** - Analytics Engine and dashboard
+- **[Analytics](docs/ANALYTICS.md)** - D1 Database analytics and dashboard
 - **[Integration Guide](docs/INTEGRATION_GUIDE.md)** - Integration examples
 - **[System Status](docs/SYSTEM_STATUS.md)** - Current deployment status
 
