@@ -1,5 +1,6 @@
 /**
- * API Client for Analytics Engine queries
+ * API Client for D1 Database queries
+ * MIGRATION NOTE: Updated from Analytics Engine to D1
  */
 
 const API_BASE = import.meta.env.DEV ? 'http://localhost:8787' : '';
@@ -23,21 +24,21 @@ export interface QueryResult {
   rows?: number;
 }
 
-// Helper to build time filter WHERE clause
+// Helper to build time filter WHERE clause (D1/SQLite syntax)
 function buildTimeFilter(hours: number): string {
-  // For "all time", use a condition that's always true (6 months = ~4320 hours)
+  // For "all time", query last 6 months
   return hours === 0
-    ? `WHERE timestamp >= NOW() - INTERVAL '4320' HOUR`
-    : `WHERE timestamp >= NOW() - INTERVAL '${hours}' HOUR`;
+    ? `WHERE timestamp >= datetime('now', '-180 days')`
+    : `WHERE timestamp >= datetime('now', '-${hours} hours')`;
 }
 
 // Helper to build time filter for queries with additional AND conditions
 function buildTimeFilterWith(hours: number, condition: string): string {
   if (hours === 0) {
-    // For "all time", query last 6 months (Analytics Engine default retention)
-    return `WHERE timestamp >= NOW() - INTERVAL '4320' HOUR AND ${condition}`;
+    // For "all time", query last 6 months
+    return `WHERE timestamp >= datetime('now', '-180 days') AND ${condition}`;
   }
-  return `WHERE timestamp >= NOW() - INTERVAL '${hours}' HOUR AND ${condition}`;
+  return `WHERE timestamp >= datetime('now', '-${hours} hours') AND ${condition}`;
 }
 
 export async function query(sql: string, hours: number = 24): Promise<QueryResult> {
@@ -73,22 +74,22 @@ export interface Stats {
 }
 
 export async function loadStats(hours: number = 24): Promise<Stats> {
-  // Get counts by decision type
+  // Get counts by decision type (D1 syntax)
   const decisionsResult = await query(`
     SELECT
-      blob1 as decision,
-      SUM(_sample_interval) as count
-    FROM ANALYTICS
+      decision,
+      COUNT(*) as count
+    FROM validations
     ${buildTimeFilter(hours)}
     GROUP BY decision
   `, hours);
 
-  // Get averages separately using weighted average
+  // Get averages separately
   const avgsResult = await query(`
     SELECT
-      SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk,
-      SUM(_sample_interval * double5) / SUM(_sample_interval) as avg_latency
-    FROM ANALYTICS
+      AVG(risk_score) as avg_risk,
+      AVG(latency) as avg_latency
+    FROM validations
     ${buildTimeFilter(hours)}
   `, hours);
 

@@ -13,6 +13,7 @@ import { logger } from '../logger';
 import { updateDisposableDomains, getDisposableDomainMetadata, clearDomainCache } from '../services/disposable-domain-updater';
 import { updateTLDRiskProfiles, getTLDRiskMetadata, clearTLDCache, getTLDRiskProfile, updateSingleTLDProfile } from '../services/tld-risk-updater';
 import { getAllTLDProfiles, getTLDStats } from '../detectors/tld-risk';
+import { D1Queries, executeD1Query } from '../database/queries';
 
 const admin = new Hono<{ Bindings: Env }>();
 
@@ -260,27 +261,21 @@ admin.get('/health', (c) => {
 
 /**
  * GET /admin/analytics
- * Query Analytics Engine with labeled results
+ * Query D1 database with analytics data
  * Query params:
  *   - query: SQL query to run (optional, defaults to summary)
  *   - hours: Number of hours to look back (default: 24)
  *
- * Requires environment variables:
- *   - CLOUDFLARE_ACCOUNT_ID: Your Cloudflare account ID
- *   - CLOUDFLARE_API_TOKEN: API token with Account Analytics Read permission
+ * Migration Note: Now uses D1 instead of Analytics Engine
  */
 admin.get('/analytics', async (c) => {
 	try {
-		// Check for required configuration
-		const accountId = c.env.CLOUDFLARE_ACCOUNT_ID;
-		const apiToken = c.env.CLOUDFLARE_API_TOKEN;
-
-		if (!accountId || !apiToken) {
+		// Check for D1 binding
+		if (!c.env.DB) {
 			return c.json(
 				{
-					error: 'Analytics Engine not configured',
-					message: 'CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN secrets must be set',
-					setup: 'Run: wrangler secret put CLOUDFLARE_ACCOUNT_ID and wrangler secret put CLOUDFLARE_API_TOKEN',
+					error: 'D1 database not configured',
+					message: 'DB binding is missing. Check wrangler.jsonc configuration.',
 				},
 				503
 			);
@@ -289,87 +284,18 @@ admin.get('/analytics', async (c) => {
 		const hours = parseInt(c.req.query('hours') || '24', 10);
 		const customQuery = c.req.query('query');
 
-		// Get dataset name from Analytics Engine binding
-		const dataset = 'ANALYTICS'; // Default dataset name
-
 		// Default query: Summary of decisions over time
-		const defaultQuery = `
-			SELECT
-				blob1 as decision,
-				blob2 as block_reason,
-				blob4 as risk_bucket,
-				SUM(_sample_interval) as count,
-				SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score,
-				SUM(_sample_interval * double2) / SUM(_sample_interval) as avg_entropy_score,
-				SUM(_sample_interval * double3) / SUM(_sample_interval) as avg_bot_score,
-				SUM(_sample_interval * double5) / SUM(_sample_interval) as avg_latency_ms,
-				toStartOfHour(timestamp) as hour
-			FROM ${dataset}
-			WHERE timestamp >= NOW() - INTERVAL '${hours}' HOUR
-			GROUP BY decision, block_reason, risk_bucket, hour
-			ORDER BY hour DESC, count DESC
-		`;
+		const query = customQuery || D1Queries.summary(hours);
 
-		const query = customQuery || defaultQuery;
-
-		// Execute query via Cloudflare SQL API
-		const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/analytics_engine/sql`;
-
-		const response = await fetch(apiUrl, {
-			method: 'POST',
-			headers: {
-				'Authorization': `Bearer ${apiToken}`,
-				'Content-Type': 'text/plain',
-			},
-			body: query,
-		});
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			throw new Error(`Cloudflare API error: ${response.status} - ${errorText}`);
-		}
-
-		const data = await response.json() as { data?: unknown };
+		// Execute query on D1
+		const data = await executeD1Query(c.env.DB, query);
 
 		return c.json({
 			success: true,
 			query,
 			hours,
-			data: data.data || data,
-			columnMapping: {
-				blob1: 'decision (allow/warn/block)',
-				blob2: 'block_reason',
-				blob3: 'country',
-				blob4: 'risk_bucket',
-				blob5: 'domain',
-				blob6: 'tld',
-				blob7: 'pattern_type',
-				blob8: 'pattern_family',
-				blob9: 'is_disposable',
-				blob10: 'is_free_provider',
-				blob11: 'has_plus_addressing',
-				blob12: 'has_keyboard_walk',
-				blob13: 'is_gibberish',
-				blob14: 'email_local_part',
-				blob15: 'client_ip',                        // Phase 8: NEW
-				blob16: 'user_agent',                       // Phase 8: NEW
-				blob17: 'model_version',                    // Phase 8: NEW (A/B testing)
-				blob18: 'exclude_from_training',            // Phase 8: NEW (security)
-				blob19: 'markov_detected',                  // Phase 7: MOVED from blob15
-				double1: 'risk_score',
-				double2: 'entropy_score',
-				double3: 'bot_score',
-				double4: 'asn',
-				double5: 'latency_ms',
-				double6: 'tld_risk_score',
-				double7: 'domain_reputation_score',
-				double8: 'pattern_confidence',
-				double9: 'markov_confidence',               // Phase 7
-				double10: 'markov_cross_entropy_legit',     // Phase 7
-				double11: 'markov_cross_entropy_fraud',     // Phase 7
-				double12: 'ip_reputation_score',            // Phase 8: NEW
-				index1: 'fingerprint_hash',
-			},
+			data,
+			note: 'Migrated to D1 - now uses proper column names instead of blob1/double1',
 		});
 	} catch (error) {
 		return c.json(
@@ -464,143 +390,74 @@ admin.delete('/analytics/test-data', (c) => {
 
 /**
  * GET /admin/analytics/queries
- * Get a list of pre-built useful queries
+ * Get a list of pre-built useful D1 queries
+ * Migration Note: Now returns D1-compatible SQLite queries
  */
 admin.get('/analytics/queries', (c) => {
+	const hours = 24; // Default for examples
+
 	const queries = {
 		summary: {
 			name: 'Decision Summary',
 			description: 'Overview of allow/warn/block decisions',
-			sql: `
-SELECT
-  blob1 as decision,
-  SUM(_sample_interval) as count,
-  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score,
-  SUM(_sample_interval * double5) / SUM(_sample_interval) as avg_latency_ms
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-GROUP BY decision
-ORDER BY count DESC
-			`.trim(),
+			sql: D1Queries.summary(hours).trim(),
 		},
 		blockReasons: {
 			name: 'Top Block Reasons',
 			description: 'Most common reasons for blocking emails',
-			sql: `
-SELECT
-  blob2 as block_reason,
-  SUM(_sample_interval) as count,
-  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-  AND blob1 = 'block'
-  AND blob2 != 'none'
-GROUP BY block_reason
-ORDER BY count DESC
-LIMIT 10
-			`.trim(),
+			sql: D1Queries.blockReasons(hours).trim(),
 		},
 		riskDistribution: {
 			name: 'Risk Score Distribution',
 			description: 'Distribution of emails by risk bucket',
-			sql: `
-SELECT
-  blob4 as risk_bucket,
-  SUM(_sample_interval) as count,
-  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-GROUP BY risk_bucket
-ORDER BY risk_bucket
-			`.trim(),
+			sql: D1Queries.riskDistribution(hours).trim(),
 		},
-		countryBreakdown: {
-			name: 'Country Breakdown',
+		topCountries: {
+			name: 'Top Countries',
 			description: 'Validations by country',
-			sql: `
-SELECT
-  blob3 as country,
-  blob1 as decision,
-  SUM(_sample_interval) as count,
-  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-GROUP BY country, decision
-ORDER BY count DESC
-LIMIT 20
-			`.trim(),
+			sql: D1Queries.topCountries(hours).trim(),
 		},
 		highRisk: {
 			name: 'High Risk Emails',
 			description: 'Emails with risk score > 0.6',
-			sql: `
-SELECT
-  blob1 as decision,
-  blob2 as block_reason,
-  blob3 as country,
-  double1 as risk_score,
-  double2 as entropy_score,
-  timestamp
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-  AND double1 > 0.6
-ORDER BY timestamp DESC
-LIMIT 100
-			`.trim(),
+			sql: D1Queries.highRiskEmails(hours).trim(),
 		},
 		performance: {
 			name: 'Performance Metrics',
 			description: 'Latency statistics by decision',
-			sql: `
-SELECT
-  blob1 as decision,
-  SUM(_sample_interval) as count,
-  SUM(_sample_interval * double5) / SUM(_sample_interval) as avg_latency_ms,
-  quantileExactWeighted(0.5)(double5, _sample_interval) as p50_latency_ms,
-  quantileExactWeighted(0.95)(double5, _sample_interval) as p95_latency_ms,
-  quantileExactWeighted(0.99)(double5, _sample_interval) as p99_latency_ms
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-GROUP BY decision
-			`.trim(),
+			sql: D1Queries.performanceMetrics(hours).trim(),
 		},
 		timeline: {
 			name: 'Hourly Timeline',
 			description: 'Validations over time by decision',
-			sql: `
-SELECT
-  toStartOfHour(timestamp) as hour,
-  blob1 as decision,
-  SUM(_sample_interval) as count,
-  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-GROUP BY hour, decision
-ORDER BY hour DESC
-			`.trim(),
+			sql: D1Queries.hourlyTimeline(hours).trim(),
 		},
 		fingerprints: {
 			name: 'Top Fingerprints',
 			description: 'Most active fingerprints (potential automation)',
-			sql: `
-SELECT
-  index1 as fingerprint,
-  SUM(_sample_interval) as validation_count,
-  SUM(_sample_interval * double1) / SUM(_sample_interval) as avg_risk_score,
-  blob3 as country
-FROM ANALYTICS
-WHERE timestamp >= NOW() - INTERVAL '24' HOUR
-GROUP BY index1, blob3
-HAVING SUM(_sample_interval) > 10
-ORDER BY validation_count DESC
-LIMIT 20
-			`.trim(),
+			sql: D1Queries.topFingerprints(hours).trim(),
+		},
+		disposableDomains: {
+			name: 'Disposable Domains',
+			description: 'Most frequently used disposable domains',
+			sql: D1Queries.disposableDomains(hours).trim(),
+		},
+		patternFamilies: {
+			name: 'Pattern Families',
+			description: 'Analysis of detected pattern families',
+			sql: D1Queries.patternFamilies(hours).trim(),
+		},
+		markovStats: {
+			name: 'Markov Detection Stats',
+			description: 'Markov chain fraud detection statistics',
+			sql: D1Queries.markovStats(hours).trim(),
 		},
 	};
 
 	return c.json({
 		queries,
 		usage: 'Use the SQL from any query with GET /admin/analytics?query=<url_encoded_sql>',
+		note: 'Migrated to D1 - SQLite syntax with proper column names',
 	});
 });
 
@@ -609,12 +466,13 @@ LIMIT 20
  * Manually trigger Markov Chain model retraining
  *
  * This endpoint initiates the online learning training pipeline:
- * 1. Fetches high-confidence data from Analytics Engine (last 7 days)
+ * 1. Fetches high-confidence data from D1 database (last 7 days)
  * 2. Runs anomaly detection to check for data poisoning attacks
  * 3. Trains new models on fraud vs legitimate samples
  * 4. Validates new models against production
  * 5. Saves candidate model to KV with SHA-256 checksum
  *
+ * Migration Note: Now uses D1 instead of Analytics Engine
  * Returns the training result including success status, metrics, and any errors.
  */
 admin.post('/markov/train', async (c) => {
@@ -624,16 +482,12 @@ admin.post('/markov/train', async (c) => {
 			source: 'admin_api',
 		}, 'Manual training triggered via admin API');
 
-		// Check for required configuration
-		const accountId = c.env.CLOUDFLARE_ACCOUNT_ID;
-		const apiToken = c.env.CLOUDFLARE_API_TOKEN;
-
-		if (!accountId || !apiToken) {
+		// Check for D1 binding
+		if (!c.env.DB) {
 			return c.json(
 				{
-					error: 'Analytics Engine not configured',
-					message: 'CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN secrets must be set',
-					setup: 'Run: wrangler secret put CLOUDFLARE_ACCOUNT_ID and wrangler secret put CLOUDFLARE_API_TOKEN',
+					error: 'D1 database not configured',
+					message: 'DB binding is missing. Check wrangler.jsonc configuration.',
 				},
 				503
 			);
