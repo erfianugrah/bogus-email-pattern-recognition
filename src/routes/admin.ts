@@ -47,9 +47,16 @@ function validateD1Query(sql: string): { valid: boolean; error?: string } {
 		}
 	}
 
-	// Must query from 'validations' table (case insensitive check)
-	if (!trimmed.includes('FROM VALIDATIONS') && !trimmed.includes('FROM\nVALIDATIONS') && !trimmed.includes('FROM\tVALIDATIONS')) {
-		return { valid: false, error: 'Query must be FROM validations table' };
+	// Must query from one of the allowed tables
+	const allowedTables = ['VALIDATIONS', 'TRAINING_METRICS', 'AB_TEST_METRICS', 'ADMIN_METRICS'];
+	const hasValidTable = allowedTables.some(table =>
+		trimmed.includes(`FROM ${table}`) ||
+		trimmed.includes(`FROM\n${table}`) ||
+		trimmed.includes(`FROM\t${table}`)
+	);
+
+	if (!hasValidTable) {
+		return { valid: false, error: 'Query must be FROM one of: validations, training_metrics, ab_test_metrics, admin_metrics' };
 	}
 
 	return { valid: true };
