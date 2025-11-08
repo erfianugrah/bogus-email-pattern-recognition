@@ -235,7 +235,7 @@ describe('Fraudulent Email Detection Suite', () => {
 			it('should detect current year in email patterns', async () => {
 				const currentYear = new Date().getFullYear();
 				const datedEmails = [
-					`john.${currentYear}@example.com`,
+					`personA.${currentYear}@example.com`,
 					`user_${currentYear}@company.com`,
 					`test${currentYear}@service.com`,
 				];
@@ -379,7 +379,7 @@ describe('Fraudulent Email Detection Suite', () => {
 	describe('Legitimate vs Fraudulent Distinction', () => {
 		it('should allow legitimate business emails', async () => {
 			const legitimateEmails = [
-				'person1@company.com',
+				'personA@company.com',
 				'user1@enterprise.org',
 				'contact@business.net',
 			];

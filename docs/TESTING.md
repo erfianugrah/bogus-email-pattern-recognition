@@ -65,7 +65,7 @@ Location: `tests/unit/`
 
 **Pattern Detector Tests** (`detectors/pattern-detectors.test.ts`)
 - Sequential patterns (user1, user2, etc.)
-- Dated patterns (john.doe.2024)
+- Dated patterns (person1.person2.2024)
 - Keyboard walk patterns (qwerty, asdfgh)
 - Plus addressing (+spam, +test)
 - Gibberish detection
@@ -116,13 +116,13 @@ Location: `tests/integration/`
 ```
 user1@example.com
 user2@example.com
-person1.person2@company.com
+personA.personB001@company.com
 ```
 
 **2. Dated Patterns**
 ```
-john.doe.2024@example.com
-personG.personH@company.com
+personC.personD.2024@example.com
+personE.2025@company.com
 ```
 
 **3. Keyboard Walk Patterns**

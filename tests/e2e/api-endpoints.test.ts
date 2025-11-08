@@ -59,7 +59,7 @@ describe('API Endpoints E2E', () => {
 				'user123@gmail.com',
 				'testuser@yahoo.com',
 				'someone@outlook.com',
-				'person@hotmail.com',
+				'personA@hotmail.com',
 			];
 
 			for (const email of freeEmails) {

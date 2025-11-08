@@ -14,12 +14,12 @@ import {
 function createTestModels(): EnsembleModels {
 	// Train on typical legitimate patterns
 	const legitSamples = [
-		'john.doe',
-		'jane.smith',
-		'bob.jones',
-		'alice.wilson',
-		'mike.brown',
-		'sarah.davis',
+		'person1.person2',
+		'personA.personB',
+		'personC.personD',
+		'personE.personF',
+		'personG.personH',
+		'personI.personJ',
 		'admin',
 		'support',
 		'info',
@@ -111,10 +111,10 @@ describe('MarkovEnsembleDetector', () => {
 			const detector = new MarkovEnsembleDetector(models);
 
 			// Test with patterns similar to training data
-			const result1 = detector.detect('john.smith');
+			const result1 = detector.detect('personE.personF');
 			expect(result1.prediction).toBe('legit');
 
-			const result2 = detector.detect('mary.jones');
+			const result2 = detector.detect('personU.personV');
 			expect(result2.prediction).toBe('legit');
 
 			const result3 = detector.detect('admin');
@@ -140,7 +140,7 @@ describe('MarkovEnsembleDetector', () => {
 			const models = createTestModels();
 			const detector = new MarkovEnsembleDetector(models);
 
-			const result = detector.detect('john.doe');
+			const result = detector.detect('person1.person2');
 
 			expect(result.models.unigram).toBeDefined();
 			expect(result.models.unigram.order).toBe(1);
@@ -156,7 +156,7 @@ describe('MarkovEnsembleDetector', () => {
 			const models = createTestModels();
 			const detector = new MarkovEnsembleDetector(models);
 
-			const result = detector.detect('john.doe');
+			const result = detector.detect('person1.person2');
 
 			expect(result.combinedEntropy).toBeGreaterThan(0);
 			expect(result.combinedEntropy).toBeLessThan(Infinity);
@@ -177,7 +177,7 @@ describe('MarkovEnsembleDetector', () => {
 			const detector = new MarkovEnsembleDetector(models);
 
 			// Use a clear legit pattern
-			const result = detector.detect('john.smith');
+			const result = detector.detect('personE.personF');
 
 			// If all models agree, unanimous should be true
 			if (
@@ -196,11 +196,11 @@ describe('MarkovEnsembleDetector', () => {
 
 			// Test multiple emails to find majority case
 			const testEmails = [
-				'john.doe',
+				'person1.person2',
 				'test123',
 				'support',
 				'random456',
-				'alice.wilson',
+				'personK.personL',
 			];
 
 			for (const email of testEmails) {
@@ -215,7 +215,7 @@ describe('MarkovEnsembleDetector', () => {
 			const models = createTestModels();
 			const detector = new MarkovEnsembleDetector(models);
 
-			const result = detector.detect('john.doe');
+			const result = detector.detect('person1.person2');
 
 			expect(result.agreement.disagreementScore).toBeGreaterThanOrEqual(0.0);
 			expect(result.agreement.disagreementScore).toBeLessThanOrEqual(1.0);
@@ -227,7 +227,7 @@ describe('MarkovEnsembleDetector', () => {
 			const models = createTestModels();
 			const detector = new MarkovEnsembleDetector(models);
 
-			const testEmails = ['john.doe', 'test123', 'support', 'user999'];
+			const testEmails = ['person1.person2', 'test123', 'support', 'user999'];
 
 			for (const email of testEmails) {
 				const result = detector.detect(email);
@@ -241,9 +241,9 @@ describe('MarkovEnsembleDetector', () => {
 			const detector = new MarkovEnsembleDetector(models);
 
 			const testEmails = [
-				'john.smith',
-				'mary.jones',
-				'bob.davis',
+				'personM.personN',
+				'personO.personP',
+				'personQ.personR',
 				'test123',
 				'user456',
 			];
@@ -261,7 +261,7 @@ describe('MarkovEnsembleDetector', () => {
 			const models = createTestModels();
 			const detector = new MarkovEnsembleDetector(models);
 
-			const testEmails = ['john.doe', 'test123', 'support'];
+			const testEmails = ['person1.person2', 'test123', 'support'];
 
 			for (const email of testEmails) {
 				const result = detector.detect(email);
@@ -375,7 +375,7 @@ describe('MarkovEnsembleDetector', () => {
 			);
 
 			// Should produce same results
-			const result = detector.detect('john.doe');
+			const result = detector.detect('person1.person2');
 			expect(result.prediction).toBeDefined();
 			expect(result.models.unigram.order).toBe(1);
 			expect(result.models.bigram.order).toBe(2);

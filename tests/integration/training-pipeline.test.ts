@@ -30,9 +30,9 @@ describe('Training Pipeline - Integration Tests', () => {
 				{ email_local_part: 'asdfghjkl123', decision: 'block', risk_score: 0.88 },
 				{ email_local_part: 'user12345678', decision: 'warn', risk_score: 0.75 },
 				// High-confidence legitimate samples
-				{ email_local_part: 'john.doe', decision: 'allow', risk_score: 0.10 },
-				{ email_local_part: 'alice.smith', decision: 'allow', risk_score: 0.05 },
-				{ email_local_part: 'bob.johnson', decision: 'allow', risk_score: 0.15 },
+				{ email_local_part: 'person1.person2', decision: 'allow', risk_score: 0.10 },
+				{ email_local_part: 'personA.personB', decision: 'allow', risk_score: 0.05 },
+				{ email_local_part: 'personC.personD', decision: 'allow', risk_score: 0.15 },
 				// Medium confidence (should be excluded in real pipeline)
 				{ email_local_part: 'maybe.fraud', decision: 'warn', risk_score: 0.55 },
 			];
@@ -48,8 +48,8 @@ describe('Training Pipeline - Integration Tests', () => {
 			expect(fraudSamples).toContain('asdfghjkl123');
 
 			// Verify legit samples
-			expect(legitSamples).toContain('john.doe');
-			expect(legitSamples).toContain('alice.smith');
+			expect(legitSamples).toContain('person1.person2');
+			expect(legitSamples).toContain('personA.personB');
 		});
 
 		it('should handle large datasets efficiently', () => {

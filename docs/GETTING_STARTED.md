@@ -271,7 +271,7 @@ curl -X POST http://localhost:8787/validate \
   "signals": {
     "formatValid": true,
     "entropyScore": 0.42,
-    "localPartLength": 8,
+    "localPartLength": 15,
     "isDisposableDomain": false,
     "isFreeProvider": false,
     "domainReputationScore": 0,

@@ -4,7 +4,7 @@
 
 export const validEmails = [
   'person1.person2@example.com',
-  'jane_smith@company.co.uk',
+  'person3_person4@company.co.uk',
   'user+tag@domain.org',
   'test.email.with.many.dots@example.com',
   'simple@example.com',

@@ -236,7 +236,7 @@ if (numbers.length > 0) {
 **Purpose**: Detect date/year-based patterns
 
 **Examples**:
-- `john.doe.2024@`
+- `personA.personB.2024@`
 - `user_2025@`
 - `name.oct2024@`
 
@@ -256,7 +256,7 @@ if (numbers.length > 0) {
 **Normalization**:
 ```typescript
 // Gmail example
-"john.doe+tag@gmail.com" → "johndoe@gmail.com"
+"person1.person2+tag@gmail.com" → "person1person2@gmail.com"
 
 // Remove dots (Gmail-specific)
 // Remove plus-tag
@@ -443,7 +443,7 @@ return riskScore * confidence;  // Scale by confidence
 
 **Example**:
 ```
-Legitimate: "john.anderson" → Low fraud cross-entropy
+Legitimate: "person1.person2" → Low fraud cross-entropy
 Fraud: "xk9m2qw7p" → High fraud cross-entropy
 
 Ensemble Decision:

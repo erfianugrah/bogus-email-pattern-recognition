@@ -452,9 +452,9 @@ WORKER_URL=https://your-worker.workers.dev npm run test:e2e
 
 ### ✅ Legitimate Emails (Allow)
 ```
-person1.person2@gmail.com       → Risk: 0.15 (allow)
-personC.personD@university.edu → Risk: 0.05 (allow)
-garcia.rodriguez@outlook.com → Risk: 0.12 (allow) - Spanish name detected
+person1.person2@gmail.com  → Risk: 0.15 (allow)
+personA.personB@university.edu → Risk: 0.05 (allow)
+personC.personD@outlook.com → Risk: 0.12 (allow)
 ```
 
 ### ⚠️ Suspicious Patterns (Warn)

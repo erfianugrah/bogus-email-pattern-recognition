@@ -131,7 +131,7 @@ describe('Model Training Utilities', () => {
 			mockKV.setMockData(`training_data_${today}`, {
 				date: today,
 				samples: {
-					legit: [{ localPart: 'john.doe', label: 'legit' }],
+					legit: [{ localPart: 'person1.person2', label: 'legit' }],
 					fraud: [{ localPart: 'user123', label: 'fraud' }],
 				},
 			});
@@ -154,14 +154,14 @@ describe('Model Training Utilities', () => {
 			};
 
 			const legitSamples = [
-				'john.doe',
-				'jane.smith',
-				'bob.wilson',
-				'alice.johnson',
-				'charlie.brown',
-				'david.miller',
-				'emma.davis',
-				'frank.moore',
+				'person1.person2',
+				'personA.personB',
+				'personC.personD',
+				'personE.personF',
+				'personG.personH',
+				'personI.personJ',
+				'personK.personL',
+				'personM.personN',
 				'grace.taylor',
 				'henry.anderson',
 			];
@@ -205,7 +205,7 @@ describe('Model Training Utilities', () => {
 				minSamplesPerClass: 5,
 			};
 
-			const legitSamples = ['john.doe', 'jane.smith', 'bob.wilson', 'alice.johnson', 'charlie.brown'];
+			const legitSamples = ['person1.person2', 'personA.personB', 'personC.personD', 'personE.personF', 'personG.personH'];
 			const fraudSamples = ['user001', 'user002', 'test123', 'test456', 'abc123'];
 
 			const models = trainModels(legitSamples, fraudSamples, config);

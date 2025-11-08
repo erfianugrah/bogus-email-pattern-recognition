@@ -476,7 +476,7 @@ This release includes comprehensive optimization through Quick Wins and Priority
   - Leading zero detection (high confidence)
   - Common base word detection
   - Batch pattern analysis
-- **Dated Pattern Detection**: Finds john.doe.2024, user_2025
+- **Dated Pattern Detection**: Finds person1.person2.2024, user_2025
   - Year patterns (2020-2029)
   - Short year patterns (20-29)
   - Month-year patterns

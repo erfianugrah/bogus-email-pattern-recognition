@@ -242,7 +242,7 @@ EXAMPLES
   // Test models
   logger.subsection('Testing Models');
   const testEmails = [
-    { email: 'john.doe', expected: 'legit' },
+    { email: 'person1.person2', expected: 'legit' },
     { email: 'user123', expected: 'fraud' },
     { email: 'admin', expected: 'legit' },
     { email: 'zzzzqqq', expected: 'fraud' },

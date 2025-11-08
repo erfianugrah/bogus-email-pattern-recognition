@@ -52,7 +52,7 @@ describe('Sequential Pattern Detector', () => {
   });
 
   it('should not detect legitimate emails as sequential', () => {
-    const result = detectSequentialPattern('person1@gmail.com');
+    const result = detectSequentialPattern('personA@gmail.com');
     expect(result.isSequential).toBe(false);
   });
 
@@ -79,7 +79,7 @@ describe('Dated Pattern Detector', () => {
   const currentYear = new Date().getFullYear();
 
   it('should detect four-digit year patterns', () => {
-    const result = detectDatedPattern(`person1.${currentYear}@gmail.com`);
+    const result = detectDatedPattern(`personA.${currentYear}@gmail.com`);
     expect(result.hasDatedPattern).toBe(true);
     expect(result.dateType).toBe('year');
     expect(result.dateComponent).toBe(currentYear.toString());
@@ -88,7 +88,7 @@ describe('Dated Pattern Detector', () => {
 
   it('should detect two-digit year patterns', () => {
     const shortYear = currentYear % 100;
-    const result = detectDatedPattern(`person2.${shortYear}@gmail.com`);
+    const result = detectDatedPattern(`personB.${shortYear}@gmail.com`);
     expect(result.hasDatedPattern).toBe(true);
     expect(result.dateType).toBe('short-year');
   });
@@ -110,7 +110,7 @@ describe('Dated Pattern Detector', () => {
 
   it('should detect birth years as dated patterns with LOW risk', () => {
     // 2010 = 15 years old = plausible birth year (Gen Z)
-    const result = detectDatedPattern('person3.2010@gmail.com');
+    const result = detectDatedPattern('personC.2010@gmail.com');
     expect(result.hasDatedPattern).toBe(true);
     expect(result.metadata?.ageCategory).toBe('plausible_birth_year');
     expect(result.metadata?.isSuspicious).toBe(false);
@@ -123,7 +123,7 @@ describe('Dated Pattern Detector', () => {
       const millennialYears = [1985, 1990, 1995];
 
       for (const year of millennialYears) {
-        const result = detectDatedPattern(`person${year}@gmail.com`);
+        const result = detectDatedPattern(`personA${year}@gmail.com`);
         expect(result.hasDatedPattern).toBe(true);
         expect(result.metadata?.ageCategory).toBe('plausible_birth_year');
         expect(result.metadata?.isSuspicious).toBe(false);
@@ -147,7 +147,7 @@ describe('Dated Pattern Detector', () => {
       const genZYears = [2000, 2005, 2010];
 
       for (const year of genZYears) {
-        const result = detectDatedPattern(`person.${year}@gmail.com`);
+        const result = detectDatedPattern(`personB.${year}@gmail.com`);
         expect(result.hasDatedPattern).toBe(true);
         expect(result.metadata?.ageCategory).toBe('plausible_birth_year');
         expect(result.metadata?.isSuspicious).toBe(false);
@@ -195,7 +195,7 @@ describe('Dated Pattern Detector', () => {
       const twoDigitYears = ['85', '90', '95'];
 
       for (const year of twoDigitYears) {
-        const result = detectDatedPattern(`person${year}@gmail.com`);
+        const result = detectDatedPattern(`personA${year}@gmail.com`);
         expect(result.hasDatedPattern).toBe(true);
         expect(result.dateType).toBe('short-year');
         expect(result.metadata?.ageCategory).toBe('plausible_birth_year');
@@ -221,7 +221,7 @@ describe('Dated Pattern Detector', () => {
       const twoDigitYears = ['00', '05', '10'];
 
       for (const year of twoDigitYears) {
-        const result = detectDatedPattern(`person${year}@gmail.com`);
+        const result = detectDatedPattern(`personB${year}@gmail.com`);
         expect(result.hasDatedPattern).toBe(true);
         expect(result.dateType).toBe('short-year');
         expect(result.metadata?.ageCategory).toBe('plausible_birth_year');
@@ -266,7 +266,7 @@ describe('Dated Pattern Detector', () => {
     });
 
     it('should flag month-year patterns even in birth range as suspicious', () => {
-      const result = detectDatedPattern('person_jan1990@gmail.com');
+      const result = detectDatedPattern('personA_jan1990@gmail.com');
       expect(result.hasDatedPattern).toBe(true);
       expect(result.dateType).toBe('month-year');
       expect(result.metadata?.isSuspicious).toBe(true);
@@ -283,7 +283,7 @@ describe('Dated Pattern Detector', () => {
   });
 
   it('should extract pattern family for dated emails', () => {
-    const family1 = getDatedPatternFamily(`person1.${currentYear}@gmail.com`);
+    const family1 = getDatedPatternFamily(`personA.${currentYear}@gmail.com`);
     const family2 = getDatedPatternFamily(`user1.${currentYear}@gmail.com`);
     expect(family1).toContain('[YEAR]');
     expect(family1).toBe(family2); // Same pattern family
@@ -291,9 +291,9 @@ describe('Dated Pattern Detector', () => {
 
   it('should analyze dated batch patterns', () => {
     const emails = [
-      `person1.${currentYear}@gmail.com`,
-      `person2.${currentYear}@gmail.com`,
-      `person3.${currentYear}@gmail.com`
+      `personA.${currentYear}@gmail.com`,
+      `personB.${currentYear}@gmail.com`,
+      `personC.${currentYear}@gmail.com`
     ];
     const result = analyzeDatedBatch(emails);
     expect(result.hasDatedPattern).toBe(true);
@@ -316,8 +316,8 @@ describe('Plus-Addressing Normalizer', () => {
   });
 
   it('should handle Gmail dot-ignoring', () => {
-    const result = normalizeEmail('person1@gmail.com');
-    expect(result.providerNormalized).toBe('person1@gmail.com');
+    const result = normalizeEmail('personA@gmail.com');
+    expect(result.providerNormalized).toBe('personA@gmail.com');
     expect(result.metadata?.dotsRemoved).toBe(0);
   });
 
@@ -364,14 +364,14 @@ describe('Plus-Addressing Normalizer', () => {
   });
 
   it('should get canonical email addresses', () => {
-    const canonical1 = getCanonicalEmail('person1+test@gmail.com');
-    const canonical2 = getCanonicalEmail('person1@gmail.com');
+    const canonical1 = getCanonicalEmail('personA+test@gmail.com');
+    const canonical2 = getCanonicalEmail('personA@gmail.com');
     expect(canonical1).toBe(canonical2);
   });
 
   it('should check email equivalence', () => {
-    const email1 = 'person1+test@gmail.com';
-    const email2 = 'person1@gmail.com';
+    const email1 = 'personA+test@gmail.com';
+    const email2 = 'personA@gmail.com';
     expect(areEmailsEquivalent(email1, email2)).toBe(true);
   });
 });
@@ -415,7 +415,7 @@ describe('Keyboard Walk Detector', () => {
   });
 
   it('should not detect legitimate emails', () => {
-    const result = detectKeyboardWalk('person1@example.com');
+    const result = detectKeyboardWalk('personA@example.com');
     expect(result.hasKeyboardWalk).toBe(false);
   });
 
@@ -441,9 +441,9 @@ describe('Integration: Real-world Attack Scenarios', () => {
   it('should detect sophisticated attack: dated pattern on Gmail', () => {
     const currentYear = new Date().getFullYear();
     const emails = [
-      `person1.${currentYear}@gmail.com`,
-      `person2.${currentYear}@gmail.com`,
-      `person3.${currentYear}@gmail.com`
+      `personA.${currentYear}@gmail.com`,
+      `personB.${currentYear}@gmail.com`,
+      `personC.${currentYear}@gmail.com`
     ];
 
     // All should be detected as dated patterns
@@ -491,8 +491,8 @@ describe('Integration: Real-world Attack Scenarios', () => {
 
   it('should handle mixed legitimate and attack emails', () => {
     const emails = [
-      'person1.person2@gmail.com',              // Legitimate
-      'personA.personB@company.com',          // Legitimate
+      'personA.personB@gmail.com',       // Legitimate
+      'personC.personD@company.com',     // Legitimate
       'user001@gmail.com',                // Attack
       'user002@gmail.com',                // Attack
       'user003@gmail.com'                 // Attack
@@ -505,9 +505,9 @@ describe('Integration: Real-world Attack Scenarios', () => {
 
   it('should not false positive on similar legitimate names', () => {
     const emails = [
-      'person1@gmail.com',
-      'person2@gmail.com',
-      'person3@gmail.com'
+      'personA@gmail.com',
+      'personB@gmail.com',
+      'personC@gmail.com'
     ];
 
     // These share a surname but are not sequential patterns

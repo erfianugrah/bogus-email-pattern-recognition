@@ -9,7 +9,7 @@
  * - Full dates: user_20241031@ (timestamp formatting)
  *
  * LEGITIMATE PATTERNS (low risk):
- * - Birth years: sarah1990@, john.smith.1985@ (personal identifiers)
+ * - Birth years: personA1990@, person1.person2.1985@ (personal identifiers)
  * - Historical years in plausible age range (13-65 years old)
  *
  * Algorithm uses temporal distance from current date as primary fraud indicator,
@@ -212,7 +212,7 @@ export function detectDatedPattern(email: string): DatedPatternResult {
   }
 
   // Pattern 3: Four-digit year (2024, 2025, etc.)
-  // Examples: john.doe.2024, user_2025, firstname.lastname.2024
+  // Examples: person1.person2.2024, user_2025, firstname.lastname.2024
   const yearPattern = /^(.+?)[._-]?(20\d{2}|19\d{2})([._-].+)?$/;
   const yearMatch = localPart.match(yearPattern);
 
@@ -260,7 +260,7 @@ export function detectDatedPattern(email: string): DatedPatternResult {
   }
 
   // Pattern 4: Leading year (less common but exists)
-  // Examples: 2024.john.doe, 2025_username
+  // Examples: 2024.person1.person2, 2025_username
   const leadingYearPattern = /^(20\d{2}|19\d{2})[._-](.+)$/;
   const leadingYearMatch = localPart.match(leadingYearPattern);
 
@@ -295,7 +295,7 @@ export function detectDatedPattern(email: string): DatedPatternResult {
   }
 
   // Pattern 5: Two-digit year (24, 25, 90, 85)
-  // Examples: john.doe.24, user_25, sarah90, mike85
+  // Examples: person1.person2.24, user_25, personA90, personB85
   // CHECK THIS LAST - most ambiguous pattern (could be random numbers)
   const shortYearPattern = /^(.+?)[._-]?(\d{2})$/;
   const shortYearMatch = localPart.match(shortYearPattern);
@@ -377,7 +377,7 @@ export function detectDatedPattern(email: string): DatedPatternResult {
 
 /**
  * Extract a normalized pattern family string for dated patterns
- * This allows grouping: john.doe.2024, jane.smith.2024 → "NAME.NAME.[YEAR]"
+ * This allows grouping: person1.person2.2024, personA.personB.2024 → "NAME.NAME.[YEAR]"
  */
 export function getDatedPatternFamily(email: string): string | null {
   const result = detectDatedPattern(email);

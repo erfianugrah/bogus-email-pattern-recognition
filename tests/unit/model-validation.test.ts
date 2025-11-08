@@ -21,7 +21,7 @@ describe('Model Validation', () => {
 			const fraudModel = new NGramMarkovChain(order);
 
 			// Train with sample data
-			const legitSamples = ['john.doe', 'jane.smith', 'bob.wilson'];
+			const legitSamples = ['person1.person2', 'personA.personB', 'personC.personD'];
 			const fraudSamples = ['user001', 'user002', 'user003'];
 
 			legitSamples.forEach((s) => legitModel.train(s, 0.3));

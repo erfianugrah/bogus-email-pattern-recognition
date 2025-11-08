@@ -16,8 +16,8 @@ interface TestCase {
 
 const testCases: TestCase[] = [
 	// English names
-	{ email: 'john.smith', expected: 'en', description: 'English name' },
-	{ email: 'mary.johnson', expected: 'en', description: 'English name' },
+	{ email: 'person1.person2', expected: 'en', description: 'English name' },
+	{ email: 'personA.personB', expected: 'en', description: 'English name' },
 
 	// Spanish names
 	{ email: 'garcia.rodriguez', expected: 'es', description: 'Spanish name' },

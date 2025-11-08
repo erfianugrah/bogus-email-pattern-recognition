@@ -9,7 +9,7 @@
  * - All go to the same inbox but appear as different emails
  *
  * Also handles Gmail's dot-ignoring:
- * - person1.person2@gmail.com = johndoe@gmail.com
+ * - person1.person2@gmail.com = person1person2@gmail.com
  */
 
 export interface NormalizedEmailResult {

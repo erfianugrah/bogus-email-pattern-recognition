@@ -57,7 +57,7 @@ describe('Email Validator', () => {
     });
 
     it('should return medium entropy for common patterns', () => {
-      const entropy = calculateEntropy('john.doe');
+      const entropy = calculateEntropy('person1.person2');
       expect(entropy).toBeGreaterThan(0.3);
       expect(entropy).toBeLessThan(0.6);
     });

@@ -310,7 +310,7 @@ echo ""
 echo "1. Legitimate email:"
 curl -s -X POST $WORKER_URL/validate \
   -H "Content-Type: application/json" \
-  -d '{"email":"personC.personD@company.com"}' | jq '{decision, riskScore}'
+  -d '{"email":"personA.personB@company.com"}' | jq '{decision, riskScore}'
 
 echo ""
 echo "2. Sequential pattern:"

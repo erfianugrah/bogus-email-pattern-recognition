@@ -5,8 +5,8 @@
  * that groups similar emails together regardless of specific values.
  *
  * Examples:
- * - "john.doe.2024@gmail.com" → family: "name.name.YEAR@gmail"
- * - "jane.smith.2024@gmail.com" → SAME family (both firstname.lastname.YEAR)
+ * - "person1.person2.2024@gmail.com" → family: "name.name.YEAR@gmail"
+ * - "personA.personB.2024@gmail.com" → SAME family (both firstname.lastname.YEAR)
  * - "user123@yahoo.com" → family: "word.NUM@yahoo"
  * - "user456@yahoo.com" → SAME family
  *

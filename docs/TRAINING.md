@@ -32,7 +32,7 @@ npm run cli train:relabel --input ./dataset/raw_emails.csv --output ./dataset/pa
 3. Outputs CSV with: `email`, `label`, `original_label`, `reason`, `confidence`, `changed`
 
 **Pattern Analysis Heuristics:**
-- ✅ Legitimate: `john.doe`, `first_last`, simple names
+- ✅ Legitimate: `person1.person2`, `first_last`, simple names
 - ⚠️ Suspicious: Very short (<3 chars), high entropy gibberish
 - 🚫 Fraud: Keyboard walks (qwerty, asdf), sequential (abc123), pure random
 

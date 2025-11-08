@@ -289,7 +289,7 @@ PATTERN ANALYSIS
   4. Random high-entropy → fraud
   5. Very short (<3 chars) → suspicious
   6. Dated patterns with suspicious years → fraud
-  7. Simple names (john.doe) → legit
+  7. Simple names (person1.person2) → legit
   8. Formatted (first_last) → legit
 `);
     return;

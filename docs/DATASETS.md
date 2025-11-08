@@ -24,7 +24,7 @@ This system trains **Markov Chain models** that learn character transition patte
 Example patterns:
 - Legitimate: `person1.person2@` - common name patterns
 - Fraudulent: `user123@` - sequential numbers
-- Legitimate: `personC.personD@` - natural abbreviations
+- Legitimate: `personA.personB@` - natural abbreviations
 - Fraudulent: `xkqw9@` - random characters
 
 ### Why Two Models?
@@ -64,7 +64,7 @@ Recommended minimum: 10,000 legitimate + 10,000 fraudulent emails
 | Label Value | Meaning | Example |
 |-------------|---------|---------|
 | `legit` | Legitimate email | person1.person2@company.com |
-| `legitimate` | Legitimate email | personC.personD@university.edu |
+| `legitimate` | Legitimate email | personA.personB@university.edu |
 | `fraud` | Fraudulent email | user123@gmail.com |
 | `fraudulent` | Fraudulent email | test456@yahoo.com |
 | `spam` | Fraudulent email | xkqw9p@tempmail.com |
@@ -96,7 +96,7 @@ Examples:
 email,label
 person1.person2@example.com,legit
 user123@gmail.com,fraud
-personC.personD@company.com,legit
+personA.personB@company.com,legit
 test456@yahoo.com,fraud
 ```
 
@@ -106,7 +106,7 @@ test456@yahoo.com,fraud
 email,label,timestamp,source,notes
 person1.person2@example.com,legit,2025-01-15,production,real user
 user123@gmail.com,fraud,2025-01-16,blocked,sequential pattern
-personC.personD@company.com,legit,2025-01-17,production,legitimate signup
+personA.personB@company.com,legit,2025-01-17,production,legitimate signup
 test456@yahoo.com,fraud,2025-01-18,flagged,sequential numbers
 ```
 
@@ -375,7 +375,7 @@ person1.person2@example.com,legit
 personA.personB@company.org,legit
 personC.personD@university.edu,legit
 personE.personF@email.com,legit
-charlie.brown@work.com,legit
+personG.personH@work.com,legit
 user1@gmail.com,fraud
 user2@gmail.com,fraud
 user3@gmail.com,fraud

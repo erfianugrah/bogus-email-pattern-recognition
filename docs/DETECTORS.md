@@ -29,8 +29,8 @@ Detects emails with sequential numbering patterns common in automated bot signup
 ✅ user123@gmail.com          (trailing number)
 ✅ test001@outlook.com        (padded zeros)
 ✅ account_42@yahoo.com       (underscore separator)
-❌ personX.personY@gmail.com     (natural name)
-❌ person1.person2@gmail.com        (birth year - legitimate)
+❌ personA.personB@gmail.com  (natural name)
+❌ personC.1990@gmail.com     (birth year - legitimate)
 ❌ april198807@outlook.com   (birth year+month - legitimate)
 ```
 
@@ -108,11 +108,11 @@ Finds date or year patterns in email addresses, common in temporary account crea
 
 ### Examples
 ```
-✅ john.doe.2025@gmail.com    (year suffix)
+✅ personA.personB.2025@gmail.com (year suffix)
 ✅ user_2025@yahoo.com        (year with separator)
 ✅ name.oct2024@domain.com    (month+year)
 ✅ 20251031@gmail.com         (YYYYMMDD)
-❌ personX.personY@gmail.com     (no dates)
+❌ personC.personD@gmail.com  (no dates)
 ```
 
 ### Date Formats Detected (5 types)
@@ -163,9 +163,9 @@ Normalizes emails and detects plus-addressing abuse (same user creating multiple
 ### Normalization Process
 ```typescript
 // Gmail example
-"john.doe+tag@gmail.com"
-  → Remove dots: "johndoe+tag@gmail.com"
-  → Remove plus: "johndoe@gmail.com"
+"person1.person2+tag@gmail.com"
+  → Remove dots: "person1person2+tag@gmail.com"
+  → Remove plus: "person1person2@gmail.com"
   → Result: canonical form for deduplication
 ```
 
@@ -409,7 +409,7 @@ Fraud Model H(x): 2.1 (good fit)
 Difference: 2.1 (50% ratio)
 Result: FRAUDULENT (confidence: 1.0) ✅
 
-Email: "personX.personY@gmail.com"
+Email: "personA.personB@gmail.com"
 Legit Model H(x): 2.3 (good fit)
 Fraud Model H(x): 3.8 (poor fit)
 Difference: -1.5 (negative ratio)

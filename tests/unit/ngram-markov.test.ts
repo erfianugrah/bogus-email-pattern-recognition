@@ -84,8 +84,8 @@ describe('NGramMarkovChain', () => {
 		test('should handle multiple training examples', () => {
 			const model = new NGramMarkovChain(2);
 
-			model.train('john.doe');
-			model.train('jane.smith');
+			model.train('person1.person2');
+			model.train('personA.personB');
 			model.train('user.name');
 
 			const stats = model.getStats();
@@ -105,18 +105,18 @@ describe('NGramMarkovChain', () => {
 
 		test('2-gram should compute cross-entropy', () => {
 			const model = new NGramMarkovChain(2);
-			model.train('john.doe');
+			model.train('person1.person2');
 
-			const entropy = model.crossEntropy('john');
+			const entropy = model.crossEntropy('person1');
 			expect(entropy).toBeGreaterThan(0);
 			expect(entropy).toBeLessThan(Infinity);
 		});
 
 		test('3-gram should compute cross-entropy', () => {
 			const model = new NGramMarkovChain(3);
-			model.train('john.doe');
+			model.train('person1.person2');
 
-			const entropy = model.crossEntropy('john');
+			const entropy = model.crossEntropy('person1');
 			expect(entropy).toBeGreaterThan(0);
 			expect(entropy).toBeLessThan(Infinity);
 		});
@@ -133,12 +133,12 @@ describe('NGramMarkovChain', () => {
 			const model = new NGramMarkovChain(2);
 
 			// Train on legitimate patterns
-			model.train('john.doe');
-			model.train('jane.smith');
-			model.train('bob.jones');
+			model.train('person1.person2');
+			model.train('personA.personB');
+			model.train('personC.personD');
 
 			// Similar pattern should have lower entropy
-			const similarEntropy = model.crossEntropy('mary.wilson');
+			const similarEntropy = model.crossEntropy('personS.personT');
 
 			// Different pattern should have higher entropy
 			const differentEntropy = model.crossEntropy('zzz123xxx');
@@ -153,13 +153,13 @@ describe('NGramMarkovChain', () => {
 
 			// Train on many similar examples
 			for (let i = 0; i < 20; i++) {
-				model.train('john.doe');
+				model.train('person1.person2');
 			}
 
 			const statsBefore = model.getStats();
 
 			// Try to train on the same pattern again - should be skipped
-			const trained = model.train('john.doe', 0.5);
+			const trained = model.train('person1.person2', 0.5);
 
 			const statsAfter = model.getStats();
 
@@ -186,36 +186,36 @@ describe('NGramMarkovChain', () => {
 
 		test('should serialize and deserialize 2-gram model', () => {
 			const model = new NGramMarkovChain(2);
-			model.train('john.doe');
+			model.train('person1.person2');
 
 			const json = model.toJSON();
 			const restored = NGramMarkovChain.fromJSON(json);
 
 			expect(restored.getOrder()).toBe(2);
 
-			const originalEntropy = model.crossEntropy('jane.doe');
-			const restoredEntropy = restored.crossEntropy('jane.doe');
+			const originalEntropy = model.crossEntropy('personA.personB');
+			const restoredEntropy = restored.crossEntropy('personA.personB');
 			expect(restoredEntropy).toBeCloseTo(originalEntropy, 2);
 		});
 
 		test('should serialize and deserialize 3-gram model', () => {
 			const model = new NGramMarkovChain(3);
-			model.train('john.doe');
+			model.train('person1.person2');
 
 			const json = model.toJSON();
 			const restored = NGramMarkovChain.fromJSON(json);
 
 			expect(restored.getOrder()).toBe(3);
 
-			const originalEntropy = model.crossEntropy('jane.doe');
-			const restoredEntropy = restored.crossEntropy('jane.doe');
+			const originalEntropy = model.crossEntropy('personA.personB');
+			const restoredEntropy = restored.crossEntropy('personA.personB');
 			expect(restoredEntropy).toBeCloseTo(originalEntropy, 2);
 		});
 
 		test('should preserve training history', () => {
 			const model = new NGramMarkovChain(2);
-			model.train('john.doe');
-			model.train('jane.smith');
+			model.train('person1.person2');
+			model.train('personA.personB');
 
 			const json = model.toJSON();
 			const restored = NGramMarkovChain.fromJSON(json);
@@ -226,7 +226,7 @@ describe('NGramMarkovChain', () => {
 
 	describe('Different Order Comparison', () => {
 		test('different orders should produce different results', () => {
-			const text = 'john.doe.example';
+			const text = 'person1.person2.example';
 
 			const model1 = new NGramMarkovChain(1);
 			const model2 = new NGramMarkovChain(2);
@@ -236,9 +236,9 @@ describe('NGramMarkovChain', () => {
 			model2.train(text);
 			model3.train(text);
 
-			const entropy1 = model1.crossEntropy('jane.smith');
-			const entropy2 = model2.crossEntropy('jane.smith');
-			const entropy3 = model3.crossEntropy('jane.smith');
+			const entropy1 = model1.crossEntropy('personA.personB');
+			const entropy2 = model2.crossEntropy('personA.personB');
+			const entropy3 = model3.crossEntropy('personA.personB');
 
 			// All should be valid
 			expect(entropy1).toBeGreaterThan(0);

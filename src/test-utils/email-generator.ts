@@ -44,8 +44,8 @@ const DEFAULT_DOMAINS = [
 	'business.com',
 ];
 
-const FIRST_NAMES = ['john', 'jane', 'mike', 'sarah', 'david', 'emma', 'alex', 'lisa'];
-const LAST_NAMES = ['smith', 'johnson', 'williams', 'brown', 'jones', 'garcia', 'miller', 'davis'];
+const FIRST_NAMES = ['person1', 'person2', 'person3', 'person4', 'person5', 'person6', 'person7', 'person8'];
+const LAST_NAMES = ['name1', 'name2', 'name3', 'name4', 'name5', 'name6', 'name7', 'name8'];
 const DICTIONARY_WORDS = ['apple', 'banana', 'cherry', 'dragon', 'eagle', 'falcon', 'grape', 'hawk'];
 
 export class EmailGenerator {

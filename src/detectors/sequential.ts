@@ -3,7 +3,7 @@
  *
  * Detects email patterns with sequential numbering like:
  * - user1@gmail.com, user2@gmail.com, user3@gmail.com
- * - john.doe.001@yahoo.com, john.doe.002@yahoo.com
+ * - person1.person2.001@yahoo.com, person1.person2.002@yahoo.com
  * - test_account_456@outlook.com
  *
  * These patterns are common in automated account creation.
@@ -60,7 +60,7 @@ export function detectSequentialPattern(email: string): SequentialPatternResult 
   }
 
   // Pattern 1: Trailing numbers (most common)
-  // Examples: user123, john.doe.456, test_account_001
+  // Examples: user123, person1.person2.456, test_account_001
   const trailingNumberMatch = localPart.match(/^(.+?)(\d+)$/);
 
   if (trailingNumberMatch) {
