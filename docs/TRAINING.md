@@ -9,8 +9,8 @@ The fraud detection system uses NGram Markov Chain models trained on large datas
 **Most spam/phishing datasets label emails based on MESSAGE CONTENT (spam/phishing), not ADDRESS PATTERNS (bot-generated).** This causes severe training issues:
 
 **The Problem:**
-- Email like `taylor@s3.serveimage.com` might be labeled "fraud" because the message was spam
-- But the pattern `taylor@[domain]` is a **legitimate name pattern**!
+- Email like `name@subdomain.example.com` might be labeled "fraud" because the message was spam
+- But the pattern `name@[domain]` is a **legitimate name pattern**!
 - Training on content-based labels teaches models the WRONG patterns
 
 **Our Solution: Pattern-Based Re-labeling**
