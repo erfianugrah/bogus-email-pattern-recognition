@@ -127,7 +127,7 @@ function calculateMetrics(results: TestResult[]) {
  * Parse CSV file into EmailData array
  * Auto-detects column positions based on header row
  * Supports: email, type/category columns (ignores IP and other columns)
- * Example: person1@example.com,192.168.1.1,legitimate,professional
+ * Example: user@example.com,192.168.1.1,legitimate,professional
  */
 function parseCSV(content: string): { emails: EmailData[], hasLabels: boolean } {
   const lines = content.trim().split('\n');
@@ -285,11 +285,11 @@ CSV FORMAT
 
   Example with header:
     email,ip,type,category
-    person1@example.com,192.168.1.1,legitimate,professional
+    user@example.com,192.168.1.1,legitimate,professional
     test123@gmail.com,10.0.0.1,fraudulent,sequential
 
   Example without header (assumes first column is email):
-    person1@example.com,legitimate,professional
+    user@example.com,legitimate,professional
     test123@gmail.com,fraudulent,sequential
 
   - Type: "legitimate"/"legit" or "fraudulent"/"fraud" (defaults to legitimate)

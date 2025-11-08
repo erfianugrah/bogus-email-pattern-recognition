@@ -111,7 +111,7 @@ describe('API Endpoints E2E', () => {
 
 		test('should detect dated patterns', async () => {
 			const datedEmails = [
-				'person1.person2@example.com',
+				'person1.2024@example.com',
 				'user_2025@company.com',
 				'test.doe.2023@business.com',
 			];

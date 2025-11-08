@@ -167,7 +167,7 @@ For production routes like `/signup`, `/login`, etc., fraud detection runs autom
 ```bash
 curl -X POST https://your-worker.workers.dev/signup \
   -H "Content-Type: application/json" \
-  -d '{"email": "person1@example.com", "password": "secret"}'
+  -d '{"email": "user@example.com", "password": "secret"}'
 
 # Response Headers:
 # X-Fraud-Decision: allow

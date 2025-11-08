@@ -147,13 +147,13 @@ user+test123@outlook.com
 **6. Random Number Suffixes**
 ```
 user_472910@example.com
-john_smith_8372@company.com
+person1_person2_8372@company.com
 ```
 
 **7. Underscore Sequential**
 ```
 user_1@example.com
-john_smith_001@test.com
+person1_person2_001@test.com
 ```
 
 **8. Simple Patterns**
