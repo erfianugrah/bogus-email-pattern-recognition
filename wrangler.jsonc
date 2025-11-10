@@ -12,7 +12,7 @@
 	},
 	"routes": [
 		{
-			"pattern": "your-worker.workers.dev",
+			"pattern": "fraud.erfi.dev",
 			"custom_domain": true
 		}
 	],

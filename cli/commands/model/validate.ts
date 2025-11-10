@@ -16,41 +16,92 @@ interface TestCase {
   note: string;
 }
 
-// Comprehensive test suite
+// Comprehensive test suite with diverse patterns
 const TEST_CASES: TestCase[] = [
-  // Gibberish patterns (should be fraud)
+  // ========================================
+  // GIBBERISH PATTERNS (should be fraud)
+  // ========================================
   { email: 'xkjgh2k9qw', expected: 'fraud', category: 'gibberish', note: 'Pure random gibberish' },
   { email: 'zzz999xxx', expected: 'fraud', category: 'gibberish', note: 'Repetitive gibberish' },
   { email: 'qwpoeiruty', expected: 'fraud', category: 'gibberish', note: 'Random keyboard spam' },
   { email: 'asdfzxcv', expected: 'fraud', category: 'gibberish', note: 'Keyboard mashing' },
   { email: 'aaaaabbbbb', expected: 'fraud', category: 'gibberish', note: 'Repetitive characters' },
+  { email: 'mxkq3j9w2r', expected: 'fraud', category: 'gibberish', note: 'High entropy random' },
+  { email: 'lhekeg10', expected: 'fraud', category: 'gibberish', note: 'Mixed random chars' },
+  { email: 'xyz999abc', expected: 'fraud', category: 'gibberish', note: 'Letter-number-letter spam' },
 
-  // Sequential patterns (should be fraud)
+  // ========================================
+  // SEQUENTIAL PATTERNS (should be fraud)
+  // ========================================
   { email: 'user1', expected: 'fraud', category: 'sequential', note: 'Simple sequential user1' },
   { email: 'user2', expected: 'fraud', category: 'sequential', note: 'Sequential user2' },
   { email: 'user123', expected: 'fraud', category: 'sequential', note: 'Sequential with number' },
   { email: 'test001', expected: 'fraud', category: 'sequential', note: 'Zero-padded sequential' },
   { email: 'account99', expected: 'fraud', category: 'sequential', note: 'Sequential account' },
+  { email: 'member456', expected: 'fraud', category: 'sequential', note: 'Sequential member' },
+  { email: 'testuser1', expected: 'fraud', category: 'sequential', note: 'Compound sequential' },
 
-  // Keyboard walks (should be fraud)
+  // ========================================
+  // KEYBOARD WALKS (should be fraud)
+  // ========================================
   { email: 'qwerty', expected: 'fraud', category: 'keyboard', note: 'QWERTY keyboard walk' },
   { email: 'asdfgh', expected: 'fraud', category: 'keyboard', note: 'ASDF keyboard walk' },
   { email: 'zxcvbn', expected: 'fraud', category: 'keyboard', note: 'ZXCV keyboard walk' },
   { email: '123456', expected: 'fraud', category: 'keyboard', note: 'Number sequence' },
+  { email: 'qazwsx', expected: 'fraud', category: 'keyboard', note: 'Vertical keyboard walk' },
+  { email: '123456789', expected: 'fraud', category: 'keyboard', note: 'Long number sequence' },
 
-  // Legitimate names (should be legit)
-  { email: 'scottpearson', expected: 'legit', category: 'legitimate', note: 'Real name' },
-  { email: 'person1.person2', expected: 'legit', category: 'legitimate', note: 'Name pattern with separator' },
+  // ========================================
+  // DATED PATTERNS (should be fraud)
+  // ========================================
+  { email: 'user2025', expected: 'fraud', category: 'dated', note: 'Current year suffix' },
+  { email: 'test2024', expected: 'fraud', category: 'dated', note: 'Recent year suffix' },
+  { email: 'signup_jan2025', expected: 'fraud', category: 'dated', note: 'Month-year pattern' },
+
+  // ========================================
+  // LEGITIMATE NAMES (should be legit)
+  // ========================================
+  { email: 'scottpearson', expected: 'legit', category: 'legitimate', note: 'Real name (no separator)' },
+  { email: 'person1.person2', expected: 'legit', category: 'legitimate', note: 'Name with dot separator' },
   { email: 'person3_person4', expected: 'legit', category: 'legitimate', note: 'Name with underscore' },
-  { email: 'michaeljohnson', expected: 'legit', category: 'legitimate', note: 'Common name' },
+  { email: 'michaeljohnson', expected: 'legit', category: 'legitimate', note: 'Common compound name' },
   { email: 'alex.smith', expected: 'legit', category: 'legitimate', note: 'Standard first.last' },
+  { email: 'sarah_williams', expected: 'legit', category: 'legitimate', note: 'First_last format' },
+  { email: 'person5person6', expected: 'legit', category: 'legitimate', note: 'No separator' },
+  { email: 'p.user', expected: 'legit', category: 'legitimate', note: 'Initial.lastname' },
 
-  // Legitimate with numbers (should be legit - edge case)
-  { email: 'person1.1985', expected: 'legit', category: 'legit_numbers', note: 'Name with birth year' },
-  { email: 'person2.90', expected: 'legit', category: 'legit_numbers', note: 'Name with 2-digit year' },
-  { email: 'contact', expected: 'legit', category: 'legitimate', note: 'Role-based email' },
-  { email: 'admin', expected: 'legit', category: 'legitimate', note: 'Admin account' },
-  { email: 'support', expected: 'legit', category: 'legitimate', note: 'Support account' },
+  // ========================================
+  // ROLE-BASED EMAILS (should be legit)
+  // ========================================
+  { email: 'contact', expected: 'legit', category: 'role_based', note: 'Contact role' },
+  { email: 'admin', expected: 'legit', category: 'role_based', note: 'Admin role' },
+  { email: 'support', expected: 'legit', category: 'role_based', note: 'Support role' },
+  { email: 'info', expected: 'legit', category: 'role_based', note: 'Info role' },
+  { email: 'sales', expected: 'legit', category: 'role_based', note: 'Sales role' },
+  { email: 'hello', expected: 'legit', category: 'role_based', note: 'Friendly greeting role' },
+
+  // ========================================
+  // LEGITIMATE WITH NUMBERS (edge cases)
+  // ========================================
+  { email: 'person1.1985', expected: 'legit', category: 'legit_numbers', note: 'Name with birth year (1985)' },
+  { email: 'person2.90', expected: 'legit', category: 'legit_numbers', note: 'Name with 2-digit year (1990)' },
+  { email: 'person7.1992', expected: 'legit', category: 'legit_numbers', note: 'Name with birth year (1992)' },
+  { email: 'person8.88', expected: 'legit', category: 'legit_numbers', note: 'Lucky number 88' },
+  { email: 'person9.42', expected: 'legit', category: 'legit_numbers', note: 'Memorable number (42)' },
+
+  // ========================================
+  // INTERNATIONAL/DIVERSE PATTERNS
+  // ========================================
+  { email: 'personA', expected: 'legit', category: 'international', note: 'Short Asian-style name' },
+  { email: 'personBpersonC', expected: 'legit', category: 'international', note: 'Compound short name' },
+  { email: 'person.D', expected: 'legit', category: 'international', note: 'Name with initial' },
+
+  // ========================================
+  // EDGE CASES - AMBIGUOUS
+  // ========================================
+  { email: 'user', expected: 'legit', category: 'edge_case', note: 'Generic but potentially valid' },
+  { email: 'test', expected: 'legit', category: 'edge_case', note: 'Test account on corporate domain' },
+  { email: 'demo', expected: 'legit', category: 'edge_case', note: 'Demo account' },
 ];
 
 class NGramMarkovChain {

@@ -43,6 +43,10 @@ export interface ValidationMetric {
   markovConfidence?: number;
   markovCrossEntropyLegit?: number;
   markovCrossEntropyFraud?: number;
+  // Ensemble metadata (v2.3+)
+  ensembleReasoning?: string;       // Ensemble decision reasoning
+  model2gramPrediction?: string;    // 2-gram model prediction (fraud/legit)
+  model3gramPrediction?: string;    // 3-gram model prediction (fraud/legit)
   // Phase 8: Online Learning data (NEW)
   clientIp?: string;            // For fraud pattern analysis
   userAgent?: string;           // For bot detection

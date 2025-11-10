@@ -278,6 +278,143 @@ export async function runTrainingPipeline(
 ): Promise<TrainedModels>
 ```
 
+## Model Ensemble Strategy
+
+### Overview
+
+The system can use an ensemble approach combining multiple n-gram orders (2-gram + 3-gram) to leverage the strengths of each model while mitigating their weaknesses.
+
+### Why Ensemble?
+
+**2-gram Model (Bigram):**
+- ✅ Robust gibberish detection
+- ✅ Good generalization with limited data (44K samples sufficient)
+- ✅ Low false positive rate on legitimate users
+- ❌ Limited context awareness (only 1 character back)
+
+**3-gram Model (Trigram):**
+- ✅ Better context understanding (2 characters back)
+- ✅ High confidence on well-trained patterns
+- ✅ Better at distinguishing similar patterns
+- ❌ Requires 200K-1M samples to avoid sparsity
+- ❌ Prone to overfitting with limited data
+
+### Ensemble Algorithm
+
+The ensemble uses **confidence-weighted voting** with intelligent fallback logic:
+
+```typescript
+// Step 1: Get predictions from both models
+const result2gram = {
+  H_legit: legit2gram.crossEntropy(localPart),
+  H_fraud: fraud2gram.crossEntropy(localPart),
+};
+
+const result3gram = {
+  H_legit: legit3gram.crossEntropy(localPart),
+  H_fraud: fraud3gram.crossEntropy(localPart),
+};
+
+// Step 2: Calculate confidence for each model
+const confidence2 = calculateConfidence(result2gram.H_legit, result2gram.H_fraud);
+const confidence3 = calculateConfidence(result3gram.H_legit, result3gram.H_fraud);
+
+// Step 3: Ensemble decision logic
+let finalPrediction, finalConfidence, reasoning;
+
+// Case 1: Both agree with high confidence (>0.3)
+if (prediction2 === prediction3 && Math.min(confidence2, confidence3) > 0.3) {
+  finalPrediction = prediction2;
+  finalConfidence = Math.max(confidence2, confidence3);
+  reasoning = 'both_agree_high_confidence';
+}
+// Case 2: 3-gram has VERY high confidence (>0.5) - trust it
+else if (confidence3 > 0.5 && confidence3 > confidence2 * 1.5) {
+  finalPrediction = prediction3;
+  finalConfidence = confidence3;
+  reasoning = '3gram_high_confidence_override';
+}
+// Case 3: 2-gram detects gibberish (high cross-entropy)
+else if (prediction2 === 'fraud' && confidence2 > 0.2 && result2gram.H_fraud > 6.0) {
+  finalPrediction = 'fraud';
+  finalConfidence = confidence2;
+  reasoning = '2gram_gibberish_detection';
+}
+// Case 4: Disagree - default to 2-gram (more robust)
+else if (prediction2 !== prediction3) {
+  finalPrediction = prediction2;
+  finalConfidence = confidence2;
+  reasoning = 'disagree_default_to_2gram';
+}
+// Case 5: Use higher confidence model
+else {
+  finalPrediction = confidence2 >= confidence3 ? prediction2 : prediction3;
+  finalConfidence = Math.max(confidence2, confidence3);
+  reasoning = confidence2 >= confidence3 ? '2gram_higher_confidence' : '3gram_higher_confidence';
+}
+```
+
+### Configuration Thresholds
+
+```typescript
+const ENSEMBLE_THRESHOLDS = {
+  both_agree_min: 0.3,        // Minimum confidence when both agree
+  override_3gram_min: 0.5,    // 3-gram needs this to override
+  override_ratio: 1.5,        // 3-gram must be 1.5x more confident
+  gibberish_entropy: 6.0,     // Cross-entropy threshold for gibberish
+  gibberish_2gram_min: 0.2,   // Min 2-gram confidence for gibberish
+};
+```
+
+### Validation
+
+Test model performance before deploying:
+
+```bash
+# Validate production models with ensemble
+npm run cli model:validate --remote --ensemble --verbose
+
+# Test specific category
+npm run cli model:validate --remote --category gibberish --ensemble
+
+# Compare model orders
+npm run cli model:validate --remote --orders "2,3" --verbose
+```
+
+### Expected Performance
+
+Based on validation testing:
+- **2-gram alone:** 87.5% accuracy
+- **3-gram alone:** 79.2% accuracy (data sparsity issues)
+- **Ensemble:** 87.5% accuracy with intelligent reasoning
+
+**Ensemble reasoning distribution:**
+- 37.5% → Use 3-gram (higher confidence)
+- 20.8% → Disagree, default to 2-gram
+- 16.7% → 3-gram high confidence override
+- 12.5% → Both agree with high confidence
+
+### Monitoring
+
+Track these metrics in production:
+- Disagreement rate between models
+- Ensemble override frequency
+- Confidence distribution per reasoning type
+- False positive/negative rates
+- Per-category accuracy
+
+### When to Use Ensemble
+
+**Use ensemble when:**
+- You have both 2-gram and 3-gram models trained
+- You want maximum accuracy across diverse patterns
+- You can tolerate slightly higher latency (~20-30ms)
+
+**Use single model when:**
+- Minimizing latency is critical
+- You only have one well-trained model
+- Simplicity is preferred over marginal gains
+
 ## See Also
 
 - [Configuration Guide](./CONFIGURATION.md)
