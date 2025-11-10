@@ -5,6 +5,8 @@
  * Routes can opt-out by setting: c.set('skipFraudDetection', true)
  */
 
+import pkg from '../../package.json';
+
 /**
  * Pattern Classification Algorithm Version
  *
@@ -15,7 +17,7 @@
  * v2.3: Markov ensemble (2-gram + 3-gram) with confidence-weighted voting
  *       Combines 2-gram robustness with 3-gram context awareness
  */
-export const PATTERN_CLASSIFICATION_VERSION = '2.3.0';
+export const PATTERN_CLASSIFICATION_VERSION = pkg.version;
 
 // Local type for Markov result in middleware (combines results from legit and fraud models)
 interface MarkovResult {
@@ -779,7 +781,7 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     ensembleReasoning: markovResult?.ensembleReasoning,
     model2gramPrediction: markovResult?.model2gramPrediction,
     model3gramPrediction: markovResult?.model3gramPrediction,
-    patternClassificationVersion: '2.3.0', // v2.3: Markov ensemble (2-gram + 3-gram)
+    patternClassificationVersion: PATTERN_CLASSIFICATION_VERSION
   });
 
   // Store validation result in context for downstream handlers
