@@ -17,7 +17,7 @@
 | **[Detectors](DETECTORS.md)** | Complete guide to all 8 fraud detectors | Developers, Data Scientists |
 | **[Risk Scoring](SCORING.md)** | Complete scoring system with examples | Developers, Analysts |
 | **[Configuration](CONFIGURATION.md)** | Configuration management via KV | DevOps |
-| **[CLI Reference](CLI.md)** | Command-line interface for all operations | Developers, DevOps |
+| **[CLI Reference](../cli/README.md)** | Command-line interface for all operations | Developers, DevOps |
 | **[Logging Standards](LOGGING_STANDARDS.md)** | Structured logging with Pino.js, event naming | Developers, DevOps |
 | **[Analytics](ANALYTICS.md)** | Analytics Engine and dashboard | Analysts |
 | **[Integration Guide](INTEGRATION_GUIDE.md)** | Integration examples | Developers |
@@ -57,7 +57,7 @@ docs/
 ├── DETECTORS.md                   # All 8 detector algorithms
 ├── SCORING.md                     # Risk scoring system with examples
 ├── CONFIGURATION.md               # Config management
-├── CLI.md                         # Command-line interface (29 commands)
+├── ../cli/README.md               # Command-line interface (43 commands)
 ├── LOGGING_STANDARDS.md           # Structured logging with Pino.js
 ├── ANALYTICS.md                   # Analytics & dashboard
 ├── INTEGRATION_GUIDE.md           # Integration examples
@@ -93,7 +93,7 @@ docs/
 
 1. **[Configuration](CONFIGURATION.md)** - Manage settings
 2. **[Analytics](ANALYTICS.md)** - Monitor system health
-3. **[CLI Reference](CLI.md)** - Command-line operations
+3. **[CLI Reference](../cli/README.md)** - Command-line operations
 4. **[Logging Standards](LOGGING_STANDARDS.md)** - Structured logging guide
 
 ---
@@ -132,7 +132,7 @@ See [Detectors Guide](DETECTORS.md) for complete technical details
 
 ## 🔧 Command Line Interface
 
-**29 commands across 5 categories** - See **[CLI Reference](CLI.md)** for complete documentation.
+**43 commands across 6 categories** - See **[CLI Reference](../cli/README.md)** for complete documentation.
 
 ### Quick Reference
 
@@ -171,7 +171,7 @@ npm run cli config:list               # List all config
 npm run cli config:sync --remote      # Sync to production
 ```
 
-**For detailed usage, workflows, and examples:** See [CLI Reference](CLI.md)
+**For detailed usage, workflows, and examples:** See [CLI Reference](../cli/README.md)
 
 ---
 

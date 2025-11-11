@@ -591,4 +591,16 @@ export default async function myCommand(args: string[]) {
 
 ---
 
+## Related Documentation
+
+- **[Getting Started](../docs/GETTING_STARTED.md)** - System setup and deployment
+- **[API Reference](../docs/API.md)** - HTTP API endpoints and usage
+- **[Training Guide](../docs/TRAINING.md)** - Model training and pattern-based re-labeling
+- **[Configuration](../docs/CONFIGURATION.md)** - Configuration management
+- **[Analytics](../docs/ANALYTICS.md)** - Analytics Engine and dashboard
+- **[Testing](../docs/TESTING.md)** - Test suite documentation
+- **[Architecture](../docs/ARCHITECTURE.md)** - System design and algorithms
+
+---
+
 **For more help**: `npm run cli --help`

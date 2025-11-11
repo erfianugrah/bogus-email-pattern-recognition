@@ -102,7 +102,6 @@ A Cloudflare Workers-based fraud detection API that identifies fraudulent email 
 | **[Getting Started](docs/GETTING_STARTED.md)** | Setup, installation, deployment |
 | **[API Reference](docs/API.md)** | Endpoints, request/response formats |
 | **[Training Guide](docs/TRAINING.md)** | Model training, pattern-based re-labeling, versioning |
-| **[Markov Retraining Summary](docs/MARKOV_RETRAINING_SUMMARY.md)** | Pattern-based training migration (v2.1) |
 | **[Configuration Guide](docs/CONFIGURATION.md)** | Risk thresholds, action overrides, feature flags |
 | **[Architecture](docs/ARCHITECTURE.md)** | System design and algorithms |
 | **[Detectors Guide](docs/DETECTORS.md)** | All 8 fraud detection algorithms |

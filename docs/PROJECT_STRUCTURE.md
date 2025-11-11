@@ -86,7 +86,7 @@ All documentation is in `docs/` folder (27 markdown files):
 ### API & Integration
 - **API.md** - API endpoints and usage
 - **INTEGRATION_GUIDE.md** - Integration examples
-- **CLI.md** - CLI tools
+- **../cli/README.md** - CLI tools (43 commands)
 
 ### Architecture & Design
 - **ARCHITECTURE.md** - System architecture
@@ -116,7 +116,6 @@ All documentation is in `docs/` folder (27 markdown files):
 ### Version History
 - **CHANGELOG_V2.1.md** - V2.1 changes
 - **MIGRATION_PATTERN_TYPE_FIX.md** - Migration guide
-- **MARKOV_RETRAINING_SUMMARY.md** - Retraining summary
 
 ## Key Files
 
