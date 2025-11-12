@@ -76,16 +76,12 @@ const ENSEMBLE_THRESHOLDS = {
 // OOD (Out-of-Distribution) Detection Thresholds (v2.4.1+)
 // Research-backed constants for anomaly detection via cross-entropy
 // v2.4.1: Piecewise threshold system with dead zone, warn zone, and block zone
+// v2.4.2: MAX_OOD_RISK moved to config for tunability
 const OOD_DETECTION = {
-  BASELINE_ENTROPY: 0.69,       // Random guessing baseline (log 2 in nats)
-  OOD_WARN_THRESHOLD: 3.8,      // Patterns above this enter warn zone (linear scaling starts)
-  OOD_BLOCK_THRESHOLD: 5.5,     // Patterns above this enter block zone (max risk)
-  MAX_OOD_RISK: 0.65,           // Maximum abnormality risk (matches block threshold 0.65)
-
-  // Deprecated (v2.4.0 - kept for reference):
-  // OOD_THRESHOLD: 3.0,        // Old: single threshold approach
-  // SCALING_FACTOR: 0.15,      // Old: linear scaling factor from 3.0
-  // MAX_OOD_RISK: 0.6,         // Old: was 0.6, now 0.65
+  BASELINE_ENTROPY: 0.69,       // Random guessing baseline (log 2 in nats) - IMMUTABLE
+  OOD_WARN_THRESHOLD: 3.8,      // Patterns above this enter warn zone - RESEARCH-BACKED
+  OOD_BLOCK_THRESHOLD: 5.5,     // Patterns above this enter block zone - RESEARCH-BACKED
+  // MAX_OOD_RISK moved to config.ood.maxRisk (v2.4.2+) - now tunable
 };
 
 // For backwards compatibility (points to 2-gram by default)
@@ -193,7 +189,8 @@ function ensemblePredict(
   legit2: NGramMarkovChain,
   fraud2: NGramMarkovChain,
   legit3: NGramMarkovChain | null,
-  fraud3: NGramMarkovChain | null
+  fraud3: NGramMarkovChain | null,
+  config: any // FraudDetectionConfig - v2.4.2: needed for OOD tunable parameters
 ): MarkovResult {
   // Calculate 2-gram results (always available)
   const H_legit2 = legit2.crossEntropy(localPart);
@@ -219,15 +216,15 @@ function ensemblePredict(
       abnormalityScore = 0;
       abnormalityRisk = 0;
     } else if (minEntropy < OOD_DETECTION.OOD_BLOCK_THRESHOLD) {
-      // Warn zone: linear interpolation from 0.35 to 0.65
+      // Warn zone: linear interpolation from warnZoneMin to maxRisk (v2.4.2: configurable)
       abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
       const range = OOD_DETECTION.OOD_BLOCK_THRESHOLD - OOD_DETECTION.OOD_WARN_THRESHOLD;
       const progress = abnormalityScore / range;
-      abnormalityRisk = 0.35 + progress * 0.30;
+      abnormalityRisk = config.ood.warnZoneMin + progress * (config.ood.maxRisk - config.ood.warnZoneMin);
     } else {
-      // Block zone: maximum OOD risk
+      // Block zone: maximum OOD risk (v2.4.2: configurable)
       abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
-      abnormalityRisk = OOD_DETECTION.MAX_OOD_RISK;
+      abnormalityRisk = config.ood.maxRisk;
     }
 
     return {
@@ -333,15 +330,15 @@ function ensemblePredict(
     abnormalityScore = 0;
     abnormalityRisk = 0;
   } else if (minEntropy < OOD_DETECTION.OOD_BLOCK_THRESHOLD) {
-    // Warn zone: linear interpolation from 0.35 to 0.65
+    // Warn zone: linear interpolation from warnZoneMin to maxRisk (v2.4.2: configurable)
     abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
     const range = OOD_DETECTION.OOD_BLOCK_THRESHOLD - OOD_DETECTION.OOD_WARN_THRESHOLD;
     const progress = abnormalityScore / range;
-    abnormalityRisk = 0.35 + progress * 0.30;
+    abnormalityRisk = config.ood.warnZoneMin + progress * (config.ood.maxRisk - config.ood.warnZoneMin);
   } else {
-    // Block zone: maximum OOD risk
+    // Block zone: maximum OOD risk (v2.4.2: configurable)
     abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
-    abnormalityRisk = OOD_DETECTION.MAX_OOD_RISK;
+    abnormalityRisk = config.ood.maxRisk;
   }
 
   return {
@@ -534,7 +531,8 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
           markovLegitModel2gram,
           markovFraudModel2gram,
           markovLegitModel3gram,
-          markovFraudModel3gram
+          markovFraudModel3gram,
+          config // v2.4.2: pass config for OOD tunable parameters
         );
 
         logger.info({
@@ -657,7 +655,7 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     // Dimension 1: Classification risk (fraud vs legit)
     let classificationRisk = markovResult?.isLikelyFraudulent ? markovResult.confidence : 0;
     if (isProfessional && classificationRisk < 0.7) {
-      classificationRisk = classificationRisk * 0.5; // Reduce for professional emails
+      classificationRisk = classificationRisk * config.adjustments.professionalEmailFactor; // v2.4.2: configurable
     }
 
     // Dimension 2: Abnormality risk (out-of-distribution)
@@ -676,14 +674,20 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     }
 
     // Tertiary: Domain signals (disposable domains, TLD risk)
-    let domainRisk = domainReputationScore * 0.2 + tldRiskScore * 0.3;
+    // v2.4.2: weights now configurable
+    let domainRisk = domainReputationScore * config.riskWeights.domainReputation
+                   + tldRiskScore * config.riskWeights.tldRisk;
     if (isProfessional) {
-      domainRisk = domainRisk * 0.5; // Halve domain risk for professional emails
+      domainRisk = domainRisk * config.adjustments.professionalDomainFactor; // v2.4.2: configurable
     }
 
     // Ensemble boost: When Markov classification and TLD risk agree, increase confidence
-    if (markovResult?.isLikelyFraudulent && tldRiskScore > 0.5) {
-      const ensembleBoost = Math.min(classificationRisk * tldRiskScore * 0.3, 0.3);
+    // v2.4.2: boost multiplier, max, and threshold now configurable
+    if (markovResult?.isLikelyFraudulent && tldRiskScore > config.ensemble.tldAgreementThreshold) {
+      const ensembleBoost = Math.min(
+        classificationRisk * tldRiskScore * config.ensemble.boostMultiplier,
+        config.ensemble.maxBoost
+      );
       score += ensembleBoost;
       logger.info({
         event: 'ensemble_boost_applied',
