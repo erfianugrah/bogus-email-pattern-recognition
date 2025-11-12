@@ -654,18 +654,24 @@ if (riskScore > 0.6) {
 ### Block Reason Priority
 
 ```typescript
-// High-confidence detections (first match wins)
+// v2.4.2: High-confidence detections (first match wins)
 if (markovRiskScore > 0.6) return 'markov_chain_fraud';
-else if (sequential) return 'sequential_pattern';
+// Removed: sequential_pattern (now handled by Markov)
 
 // Risk-based messaging
 else if (riskScore >= 0.6) {
+    if (abnormalityRisk > 0.4) return 'high_abnormality';
     if (tldRisk > 0.5) return 'high_risk_tld';
     if (domainRisk > 0.5) return 'domain_reputation';
     if (dated) return 'dated_pattern';
     return 'high_risk_multiple_signals';
 }
-else return 'entropy_threshold';
+else if (riskScore >= 0.4) {
+    if (abnormalityRisk > 0.2) return 'suspicious_abnormal_pattern';
+    if (dated) return 'suspicious_dated_pattern';
+    return 'medium_risk';
+}
+else return 'low_risk';
 ```
 
 ---
