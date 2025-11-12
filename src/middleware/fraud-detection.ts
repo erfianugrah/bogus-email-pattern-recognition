@@ -73,13 +73,19 @@ const ENSEMBLE_THRESHOLDS = {
   gibberish_2gram_min: 0.2,   // Min 2-gram confidence for gibberish
 };
 
-// OOD (Out-of-Distribution) Detection Thresholds (v2.4+)
+// OOD (Out-of-Distribution) Detection Thresholds (v2.4.1+)
 // Research-backed constants for anomaly detection via cross-entropy
+// v2.4.1: Piecewise threshold system with dead zone, warn zone, and block zone
 const OOD_DETECTION = {
-  BASELINE_ENTROPY: 0.69,      // Random guessing baseline (log 2 in nats)
-  OOD_THRESHOLD: 3.0,          // Patterns above this are severely confused (3x "poor" threshold)
-  SCALING_FACTOR: 0.15,        // Risk contribution per nat above threshold
-  MAX_OOD_RISK: 0.6,           // Cap abnormality risk at block threshold
+  BASELINE_ENTROPY: 0.69,       // Random guessing baseline (log 2 in nats)
+  OOD_WARN_THRESHOLD: 3.8,      // Patterns above this enter warn zone (linear scaling starts)
+  OOD_BLOCK_THRESHOLD: 5.5,     // Patterns above this enter block zone (max risk)
+  MAX_OOD_RISK: 0.65,           // Maximum abnormality risk (matches block threshold 0.65)
+
+  // Deprecated (v2.4.0 - kept for reference):
+  // OOD_THRESHOLD: 3.0,        // Old: single threshold approach
+  // SCALING_FACTOR: 0.15,      // Old: linear scaling factor from 3.0
+  // MAX_OOD_RISK: 0.6,         // Old: was 0.6, now 0.65
 };
 
 // For backwards compatibility (points to 2-gram by default)
@@ -203,13 +209,26 @@ function ensemblePredict(
 
   // If no 3-gram models, return 2-gram results
   if (!legit3 || !fraud3) {
-    // OOD Detection (v2.4+)
+    // OOD Detection (v2.4.1+) - Piecewise Linear Threshold
     const minEntropy = Math.min(H_legit2, H_fraud2);
-    const abnormalityScore = Math.max(0, minEntropy - OOD_DETECTION.OOD_THRESHOLD);
-    const abnormalityRisk = Math.min(
-      abnormalityScore * OOD_DETECTION.SCALING_FACTOR,
-      OOD_DETECTION.MAX_OOD_RISK
-    );
+    let abnormalityScore: number;
+    let abnormalityRisk: number;
+
+    if (minEntropy < OOD_DETECTION.OOD_WARN_THRESHOLD) {
+      // Below warn threshold: familiar patterns, no OOD risk
+      abnormalityScore = 0;
+      abnormalityRisk = 0;
+    } else if (minEntropy < OOD_DETECTION.OOD_BLOCK_THRESHOLD) {
+      // Warn zone: linear interpolation from 0.35 to 0.65
+      abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
+      const range = OOD_DETECTION.OOD_BLOCK_THRESHOLD - OOD_DETECTION.OOD_WARN_THRESHOLD;
+      const progress = abnormalityScore / range;
+      abnormalityRisk = 0.35 + progress * 0.30;
+    } else {
+      // Block zone: maximum OOD risk
+      abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
+      abnormalityRisk = OOD_DETECTION.MAX_OOD_RISK;
+    }
 
     return {
       isLikelyFraudulent: isLikelyFraud2,
@@ -219,7 +238,7 @@ function ensemblePredict(
       differenceRatio: diffRatio2,
       ensembleReasoning: '2gram_only',
       model2gramPrediction: prediction2,
-      // OOD metrics (v2.4+)
+      // OOD metrics (v2.4.1+)
       minEntropy,
       abnormalityScore,
       abnormalityRisk,
@@ -303,14 +322,27 @@ function ensemblePredict(
   const finalMaxH = Math.max(finalCrossEntropyLegit, finalCrossEntropyFraud);
   const finalDiffRatio = finalMaxH > 0 ? finalDiff / finalMaxH : 0;
 
-  // OOD Detection (v2.4+): Calculate abnormality metrics
+  // OOD Detection (v2.4.1+) - Piecewise Linear Threshold
   // When BOTH models have high cross-entropy, the pattern is out-of-distribution
   const minEntropy = Math.min(finalCrossEntropyLegit, finalCrossEntropyFraud);
-  const abnormalityScore = Math.max(0, minEntropy - OOD_DETECTION.OOD_THRESHOLD);
-  const abnormalityRisk = Math.min(
-    abnormalityScore * OOD_DETECTION.SCALING_FACTOR,
-    OOD_DETECTION.MAX_OOD_RISK
-  );
+  let abnormalityScore: number;
+  let abnormalityRisk: number;
+
+  if (minEntropy < OOD_DETECTION.OOD_WARN_THRESHOLD) {
+    // Below warn threshold: familiar patterns, no OOD risk
+    abnormalityScore = 0;
+    abnormalityRisk = 0;
+  } else if (minEntropy < OOD_DETECTION.OOD_BLOCK_THRESHOLD) {
+    // Warn zone: linear interpolation from 0.35 to 0.65
+    abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
+    const range = OOD_DETECTION.OOD_BLOCK_THRESHOLD - OOD_DETECTION.OOD_WARN_THRESHOLD;
+    const progress = abnormalityScore / range;
+    abnormalityRisk = 0.35 + progress * 0.30;
+  } else {
+    // Block zone: maximum OOD risk
+    abnormalityScore = minEntropy - OOD_DETECTION.OOD_WARN_THRESHOLD;
+    abnormalityRisk = OOD_DETECTION.MAX_OOD_RISK;
+  }
 
   return {
     isLikelyFraudulent: finalPrediction === 'fraud',
@@ -321,7 +353,7 @@ function ensemblePredict(
     ensembleReasoning: reasoning,
     model2gramPrediction: prediction2,
     model3gramPrediction: prediction3,
-    // OOD metrics (v2.4+)
+    // OOD metrics (v2.4.1+)
     minEntropy,
     abnormalityScore,
     abnormalityRisk,
@@ -807,6 +839,18 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
   const [localPart, domain] = email.split('@');
   const tld = domain ? domain.split('.').pop() : undefined;
 
+  // Calculate OOD zone for tracking (v2.4.1+)
+  let oodZone: string | undefined;
+  if (markovResult?.minEntropy !== undefined) {
+    if (markovResult.minEntropy < OOD_DETECTION.OOD_WARN_THRESHOLD) {
+      oodZone = 'none';
+    } else if (markovResult.minEntropy < OOD_DETECTION.OOD_BLOCK_THRESHOLD) {
+      oodZone = 'warn';
+    } else {
+      oodZone = 'block';
+    }
+  }
+
   writeValidationMetric(c.env.DB, {
     decision,
     riskScore,
@@ -842,6 +886,8 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     abnormalityScore: markovResult?.abnormalityScore,
     abnormalityRisk: markovResult?.abnormalityRisk,
     oodDetected: markovResult?.abnormalityScore ? markovResult.abnormalityScore > 0 : false,
+    // OOD Zone (v2.4.1+)
+    oodZone: oodZone,
     patternClassificationVersion: PATTERN_CLASSIFICATION_VERSION
   });
 
