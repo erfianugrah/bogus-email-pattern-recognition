@@ -555,6 +555,9 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
   // Calculate risk score using early returns for priority checks
   let riskScore = 0;
   let blockReason = '';
+  let classificationRisk = 0;
+  let domainRisk = 0;
+  let ensembleBoost = 0;
 
   // Priority 1: Hard blockers (immediate block)
   if (!emailValidation.valid) {
@@ -581,7 +584,7 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
       email: email.substring(0, 3) + '***',
     }, 'Starting algorithmic risk calculation');
 
-    riskScore = calculateAlgorithmicRiskScore({
+    const riskCalculation = calculateAlgorithmicRiskScore({
       email,
       markovResult,
       patternFamilyResult,
@@ -589,6 +592,10 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
       tldRiskScore,
       normalizedEmailResult
     });
+    riskScore = riskCalculation.score;
+    classificationRisk = riskCalculation.classificationRisk;
+    domainRisk = riskCalculation.domainRisk;
+    ensembleBoost = riskCalculation.ensembleBoost;
 
     blockReason = determineBlockReason({
       riskScore,
@@ -637,6 +644,7 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
    *   - Classification risk: Is this fraud or legit? (differential signal)
    *   - Abnormality risk: Is this out-of-distribution? (consensus signal)
    *   - Final risk: max(classification, abnormality) + domain signals
+   * v2.4.2 (2025-11-12): Return risk breakdown for transparency
    */
   function calculateAlgorithmicRiskScore(params: {
     email: string;
@@ -645,7 +653,7 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     domainReputationScore: number;
     tldRiskScore: number;
     normalizedEmailResult: any;
-  }): number {
+  }): { score: number; classificationRisk: number; domainRisk: number; ensembleBoost: number } {
     const { email, markovResult, patternFamilyResult, domainReputationScore, tldRiskScore, normalizedEmailResult } = params;
 
     // Check if this is a professional email
@@ -683,8 +691,9 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
 
     // Ensemble boost: When Markov classification and TLD risk agree, increase confidence
     // v2.4.2: boost multiplier, max, and threshold now configurable
+    let ensembleBoost = 0;
     if (markovResult?.isLikelyFraudulent && tldRiskScore > config.ensemble.tldAgreementThreshold) {
-      const ensembleBoost = Math.min(
+      ensembleBoost = Math.min(
         classificationRisk * tldRiskScore * config.ensemble.boostMultiplier,
         config.ensemble.maxBoost
       );
@@ -698,7 +707,12 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
       }, 'Ensemble boost: Classification + TLD risk agreement');
     }
 
-    return Math.min(score + domainRisk, 1.0);
+    return {
+      score: Math.min(score + domainRisk, 1.0),
+      classificationRisk,
+      domainRisk,
+      ensembleBoost,
+    };
   }
 
   /**
@@ -925,6 +939,12 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
           abnormalityRisk: Math.round((markovResult.abnormalityRisk || 0) * 100) / 100,
           oodDetected: (markovResult.abnormalityScore || 0) > 0,
         }),
+      }),
+      // Risk Breakdown (v2.4.2+) - Transparency into risk scoring components
+      ...(config.features.enableMarkovChainDetection && markovResult && {
+        classificationRisk: Math.round(classificationRisk * 100) / 100,
+        domainRisk: Math.round(domainRisk * 100) / 100,
+        ensembleBoost: Math.round(ensembleBoost * 100) / 100,
       }),
     },
   });

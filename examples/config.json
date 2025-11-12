@@ -33,7 +33,6 @@
     "enableOriginHeaders": false,
     "originUrl": ""
   },
-  "actionOverride": "allow",
   "riskWeights": {
     "domainReputation": 0.2,
     "tldRisk": 0.3

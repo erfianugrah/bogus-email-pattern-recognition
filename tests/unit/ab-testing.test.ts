@@ -211,9 +211,10 @@ describe('A/B Testing Framework', () => {
 
 			const treatmentConfig = getVariantConfig('treatment', abConfig, baseConfig);
 
-			// Treatment config should have merged weights
-			expect(treatmentConfig.riskWeights.domainReputation).toBe(0.2);
-			// Other configs should remain unchanged
+			// Treatment config should have overridden weights (0.15 from variant config)
+			expect(treatmentConfig.riskWeights.domainReputation).toBe(0.15);
+			expect(treatmentConfig.riskWeights.tldRisk).toBe(0.15);
+			// Other configs should remain unchanged (from base config)
 			expect(treatmentConfig.riskThresholds.block).toBe(0.6);
 			expect(treatmentConfig.features.enablePatternCheck).toBe(true);
 		});
