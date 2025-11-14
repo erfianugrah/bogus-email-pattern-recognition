@@ -22,8 +22,8 @@ Get the system running in under 5 minutes:
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/your-org/bogus-email-pattern-recognition.git
-cd bogus-email-pattern-recognition
+git clone https://github.com/your-org/markov-mail.git
+cd markov-mail
 npm install
 
 # 2. Run tests
@@ -66,8 +66,8 @@ curl -X POST http://localhost:8787/validate \
 ### Step 1: Clone Repository
 
 ```bash
-git clone https://github.com/your-org/bogus-email-pattern-recognition.git
-cd bogus-email-pattern-recognition
+git clone https://github.com/your-org/markov-mail.git
+cd markov-mail
 ```
 
 ### Step 2: Install Dependencies
@@ -595,7 +595,7 @@ If you're calling from another Cloudflare Worker, use RPC for better performance
   "name": "my-app",
   "services": [{
     "binding": "FRAUD_DETECTOR",
-    "service": "bogus-email-pattern-recognition",
+    "service": "markov-mail",
     "entrypoint": "FraudDetectionService"
   }]
 }
@@ -808,7 +808,7 @@ After setup, explore these resources:
 
 ## Support
 
-**Issues**: https://github.com/your-org/bogus-email-pattern-recognition/issues
+**Issues**: https://github.com/your-org/markov-mail/issues
 **Documentation**: Full docs in `/docs` directory
 **Tests**: 169 tests covering all functionality
 

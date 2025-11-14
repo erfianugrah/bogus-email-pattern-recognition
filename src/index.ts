@@ -292,7 +292,7 @@ app.post('/login', async (c) => {
  * {
  *   "services": [{
  *     "binding": "FRAUD_DETECTOR",
- *     "service": "bogus-email-pattern-recognition",
+ *     "service": "markov-mail",
  *     "entrypoint": "FraudDetectionService"
  *   }]
  * }
@@ -343,7 +343,7 @@ app.post('/*', async (c) => {
  * {
  *   "services": [{
  *     "binding": "FRAUD_DETECTOR",
- *     "service": "bogus-email-pattern-recognition",
+ *     "service": "markov-mail",
  *     "entrypoint": "FraudDetectionService"
  *   }]
  * }

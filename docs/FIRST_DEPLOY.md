@@ -118,9 +118,9 @@ npm run deploy
 **Expected Output:**
 ```
 Total Upload: 142.34 KiB / gzip: 41.23 KiB
-Uploaded bogus-email-pattern-recognition (1.2 sec)
-Published bogus-email-pattern-recognition (0.3 sec)
-  https://bogus-email-pattern-recognition.YOUR-SUBDOMAIN.workers.dev
+Uploaded markov-mail (1.2 sec)
+Published markov-mail (0.3 sec)
+  https://markov-mail.YOUR-SUBDOMAIN.workers.dev
 Current Deployment ID: abc12345-1234-1234-1234-123456789abc
 ```
 
@@ -130,7 +130,7 @@ Success: You'll see a `*.workers.dev` URL
 
 ```bash
 # Replace YOUR-SUBDOMAIN with your actual subdomain from output
-curl -X POST https://bogus-email-pattern-recognition.YOUR-SUBDOMAIN.workers.dev/validate \
+curl -X POST https://markov-mail.YOUR-SUBDOMAIN.workers.dev/validate \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
 ```

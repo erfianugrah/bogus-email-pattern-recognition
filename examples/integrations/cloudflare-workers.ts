@@ -15,7 +15,7 @@
  * {
  *   "services": [{
  *     "binding": "FRAUD_DETECTOR",
- *     "service": "bogus-email-pattern-recognition",
+ *     "service": "markov-mail",
  *     "entrypoint": "FraudDetectionService"
  *   }]
  * }
@@ -329,7 +329,7 @@ async function validateEmailHTTP(email: string): Promise<{
  *   "main": "./src/index.ts",
  *   "services": [{
  *     "binding": "FRAUD_DETECTOR",
- *     "service": "bogus-email-pattern-recognition",
+ *     "service": "markov-mail",
  *     "entrypoint": "FraudDetectionService"
  *   }]
  * }

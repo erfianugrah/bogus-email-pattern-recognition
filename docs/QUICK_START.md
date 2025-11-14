@@ -10,8 +10,8 @@ Get the fraud detection API running in 5 minutes.
 ## Step 1: Clone and Install (1 minute)
 
 ```bash
-git clone https://github.com/your-org/bogus-email-pattern-recognition.git
-cd bogus-email-pattern-recognition
+git clone https://github.com/your-org/markov-mail.git
+cd markov-mail
 npm install
 ```
 
@@ -33,14 +33,14 @@ npm run deploy
 
 You'll get a worker URL like:
 ```
-https://bogus-email-pattern-recognition.YOUR-SUBDOMAIN.workers.dev
+https://markov-mail.YOUR-SUBDOMAIN.workers.dev
 ```
 
 ## Step 4: Test
 
 ```bash
 # Replace YOUR-SUBDOMAIN with your actual subdomain
-curl -X POST https://bogus-email-pattern-recognition.YOUR-SUBDOMAIN.workers.dev/validate \
+curl -X POST https://markov-mail.YOUR-SUBDOMAIN.workers.dev/validate \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com"}'
 ```

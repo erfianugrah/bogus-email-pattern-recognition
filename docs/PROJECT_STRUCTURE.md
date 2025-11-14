@@ -5,7 +5,7 @@
 ## Directory Layout
 
 ```
-bogus-email-pattern-recognition/
+markov-mail/
 ├── src/                      # Source code
 │   ├── detectors/           # Pattern detection modules
 │   │   ├── _deprecated/     # Archived/deprecated detectors

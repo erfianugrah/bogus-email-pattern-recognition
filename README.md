@@ -1,4 +1,4 @@
-# Bogus Email Pattern Recognition
+# Markov Mail
 
 A Cloudflare Workers-based fraud detection API that identifies fraudulent email signup patterns through advanced pattern recognition, statistical analysis, and machine learning.
 
@@ -284,7 +284,7 @@ For Cloudflare Worker integration (5-10x lower latency):
 {
   "services": [{
     "binding": "FRAUD_DETECTOR",
-    "service": "bogus-email-pattern-recognition",
+    "service": "markov-mail",
     "entrypoint": "FraudDetectionService"
   }]
 }
@@ -380,8 +380,8 @@ See [docs/ANALYTICS.md](docs/ANALYTICS.md) for complete documentation.
 
 ```bash
 # Clone repository
-git clone https://github.com/your-org/bogus-email-pattern-recognition.git
-cd bogus-email-pattern-recognition
+git clone https://github.com/your-org/markov-mail.git
+cd markov-mail
 
 # Install dependencies
 npm install

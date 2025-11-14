@@ -906,16 +906,16 @@ This release includes comprehensive optimization through Quick Wins and Priority
 
 ---
 
-[Unreleased]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v1.4.0...HEAD
-[1.4.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v1.3.1...v1.4.0
-[1.3.1]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v1.3.0...v1.3.1
-[1.3.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v1.2.0...v1.3.0
-[1.2.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v1.1.0...v1.2.0
-[1.1.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v0.9.0...v1.0.0
-[0.9.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v0.8.0...v0.9.0
-[0.8.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v0.7.0...v0.8.0
-[0.7.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v0.6.0...v0.7.0
-[0.6.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v0.5.0...v0.6.0
-[0.5.0]: https://github.com/yourusername/bogus-email-pattern-recognition/compare/v0.1.0...v0.5.0
-[0.1.0]: https://github.com/yourusername/bogus-email-pattern-recognition/releases/tag/v0.1.0
+[Unreleased]: https://github.com/yourusername/markov-mail/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/yourusername/markov-mail/compare/v1.3.1...v1.4.0
+[1.3.1]: https://github.com/yourusername/markov-mail/compare/v1.3.0...v1.3.1
+[1.3.0]: https://github.com/yourusername/markov-mail/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/yourusername/markov-mail/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/yourusername/markov-mail/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/yourusername/markov-mail/compare/v0.9.0...v1.0.0
+[0.9.0]: https://github.com/yourusername/markov-mail/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/yourusername/markov-mail/compare/v0.7.0...v0.8.0
+[0.7.0]: https://github.com/yourusername/markov-mail/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/yourusername/markov-mail/compare/v0.5.0...v0.6.0
+[0.5.0]: https://github.com/yourusername/markov-mail/compare/v0.1.0...v0.5.0
+[0.1.0]: https://github.com/yourusername/markov-mail/releases/tag/v0.1.0

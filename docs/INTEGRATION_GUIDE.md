@@ -114,8 +114,8 @@ const result = await env.FRAUD_DETECTOR.validate({
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/bogus-email-pattern-recognition.git
-cd bogus-email-pattern-recognition
+git clone https://github.com/your-org/markov-mail.git
+cd markov-mail
 
 # Install dependencies
 npm install
@@ -141,7 +141,7 @@ Add service binding in `wrangler.jsonc`:
 {
   "services": [{
     "binding": "FRAUD_DETECTOR",
-    "service": "bogus-email-pattern-recognition",
+    "service": "markov-mail",
     "entrypoint": "FraudDetectionService"
   }]
 }

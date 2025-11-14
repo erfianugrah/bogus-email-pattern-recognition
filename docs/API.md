@@ -260,7 +260,7 @@ In your consuming worker's `wrangler.jsonc`, add a service binding:
   "name": "my-app",
   "services": [{
     "binding": "FRAUD_DETECTOR",
-    "service": "bogus-email-pattern-recognition",
+    "service": "markov-mail",
     "entrypoint": "FraudDetectionService"
   }]
 }
