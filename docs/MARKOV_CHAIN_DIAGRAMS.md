@@ -158,7 +158,7 @@ sequenceDiagram
         Models-->>Worker: H_fraud = 3.8 nats
 
         Worker->>Worker: Compare entropies<br/>diff = H_legit - H_fraud
-        Worker->>Worker: Calculate confidence<br/>|diff| / H_legit
+        Worker->>Worker: Calculate confidence<br/>abs(diff) / H_legit
     end
 
     rect rgb(255, 200, 200)
@@ -331,7 +331,7 @@ graph TD
         MARKOV --> CROSS2[Calculate H_fraud<br/>Cross-Entropy]
         CROSS1 --> DIFF[diff = H_legit - H_fraud]
         CROSS2 --> DIFF
-        DIFF --> CONF[confidence = |diff| / H_legit]
+        DIFF --> CONF[confidence = abs diff / H_legit]
     end
 
     subgraph "Two-Dimensional Risk"
@@ -391,9 +391,9 @@ graph TD
 
     subgraph "Decision Logic"
         CLAMP --> DEC{Risk Level?}
-        DEC -->|> 0.6| BLOCK[decision = 'block']
-        DEC -->|0.3-0.6| WARN[decision = 'warn']
-        DEC -->|< 0.3| ALLOW[decision = 'allow']
+        DEC -->|> 0.6| BLOCK[decision = block]
+        DEC -->|0.3-0.6| WARN[decision = warn]
+        DEC -->|< 0.3| ALLOW[decision = allow]
     end
 
     subgraph "Block Reason"
@@ -448,13 +448,13 @@ flowchart TD
         CHECK -->|3.8 to 5.5 nats| WARN_ZONE[Zone: WARN<br/>Calculate Progress]
         WARN_ZONE --> PROGRESS[progress = minEntropy - 3.8 / 1.7]
         PROGRESS --> WARN_CALC[abnormalityRisk =<br/>0.35 + progress × 0.30]
-        WARN_CALC --> WARN_FLAG[oodDetected = true<br/>oodZone = 'warn']
+        WARN_CALC --> WARN_FLAG[oodDetected = true<br/>oodZone = warn]
         WARN_FLAG --> EX2[Example: inearkstioarsitm@gmail<br/>H_legit=4.45, H_fraud=4.68<br/>min=4.45 → risk=0.46]
     end
 
     subgraph "Block Zone - Gibberish"
         CHECK -->|> 5.5 nats| BLOCK_ZONE[Zone: BLOCK<br/>abnormalityRisk = 0.65]
-        BLOCK_ZONE --> BLOCK_FLAG[oodDetected = true<br/>oodZone = 'block']
+        BLOCK_ZONE --> BLOCK_FLAG[oodDetected = true<br/>oodZone = block]
         BLOCK_FLAG --> EX3[Example: xkjgh2k9qw@gmail.com<br/>H_legit=6.23, H_fraud=6.01<br/>min=6.01 → risk=0.65]
     end
 
@@ -763,9 +763,9 @@ flowchart TD
     PAD --> LOOP[Iterate Through Characters]
 
     subgraph "For Each Character Position"
-        LOOP --> CHAR[Current char: 'u'<br/>Context: '^^']
+        LOOP --> CHAR[Current char: u<br/>Context: ^^]
 
-        CHAR --> LOOKUP[Lookup in Transition Matrix<br/>transitionCounts['^^']['u']]
+        CHAR --> LOOKUP[Lookup in Transition Matrix<br/>transitionCounts context char]
 
         LOOKUP --> FOUND{Transition<br/>Exists?}
 
@@ -777,7 +777,7 @@ flowchart TD
 
         LOG --> ACC[Accumulate<br/>sum += -log₂ P]
 
-        ACC --> UPDATE[Update Context<br/>'^u' for next char]
+        ACC --> UPDATE[Update Context<br/>^u for next char]
 
         UPDATE --> NEXT{More<br/>characters?}
         NEXT -->|Yes| CHAR
@@ -786,10 +786,10 @@ flowchart TD
     NEXT -->|No| AVG[Calculate Average<br/>H = sum / length]
 
     subgraph "Detailed Example: user123"
-        EX1[Position 0: Context='^^', Char='u'<br/>P^^→u = 0.15 → -log₂0.15 = 2.74]
-        EX2[Position 1: Context='^u', Char='s'<br/>P^u→s = 0.08 → -log₂0.08 = 3.64]
-        EX3[Position 2: Context='us', Char='e'<br/>Pus→e = 0.22 → -log₂0.22 = 2.18]
-        EX4[Position 3: Context='se', Char='r'<br/>Pse→r = 0.18 → -log₂0.18 = 2.47]
+        EX1[Position 0: Context=^^, Char=u<br/>P^^→u = 0.15 → -log₂0.15 = 2.74]
+        EX2[Position 1: Context=^u, Char=s<br/>P^u→s = 0.08 → -log₂0.08 = 3.64]
+        EX3[Position 2: Context=us, Char=e<br/>Pus→e = 0.22 → -log₂0.22 = 2.18]
+        EX4[Position 3: Context=se, Char=r<br/>Pse→r = 0.18 → -log₂0.18 = 2.47]
         EX5[Positions 4-7: Continue...<br/>Sum all -log₂ P values]
         EX6[Final: H = sum / 7<br/>Cross-Entropy in nats]
     end
@@ -814,7 +814,7 @@ flowchart TD
         DECISION -->|Negative| PRED_LEGIT[Predicted: Legitimate<br/>Lower entropy = better fit]
         DECISION -->|Positive| PRED_FRAUD[Predicted: Fraudulent<br/>Fraud model fits better]
 
-        PRED_LEGIT --> CONFIDENCE[Confidence = |diff| / max<br/>= 1.5 / 3.8 = 0.39]
+        PRED_LEGIT --> CONFIDENCE[Confidence = abs diff / max<br/>= 1.5 / 3.8 = 0.39]
         PRED_FRAUD --> CONFIDENCE
     end
 
