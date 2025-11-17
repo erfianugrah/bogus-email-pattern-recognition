@@ -72,7 +72,7 @@ admin.use('/*', requireApiKey);
 admin.get('/config', async (c) => {
 	try {
 		const config = await getConfig(c.env.CONFIG, {
-			ADMIN_API_KEY: c.env.ADMIN_API_KEY,
+			'X-API-KEY': c.env['X-API-KEY'],
 			ORIGIN_URL: c.env.ORIGIN_URL,
 		});
 
@@ -165,7 +165,7 @@ admin.patch('/config', async (c) => {
 
 		// Load current config from KV
 		const currentConfig = await getConfig(c.env.CONFIG, {
-			ADMIN_API_KEY: c.env.ADMIN_API_KEY,
+			'X-API-KEY': c.env['X-API-KEY'],
 			ORIGIN_URL: c.env.ORIGIN_URL,
 		});
 
@@ -299,7 +299,7 @@ admin.get('/health', (c) => {
 		status: 'healthy',
 		timestamp: new Date().toISOString(),
 		admin: {
-			enabled: !!c.env.ADMIN_API_KEY,
+			enabled: !!c.env['X-API-KEY'],
 		},
 	});
 });

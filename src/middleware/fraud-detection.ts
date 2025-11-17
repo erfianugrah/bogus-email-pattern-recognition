@@ -416,7 +416,7 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
 
   // Load configuration
   const config = await getConfig(c.env.CONFIG, {
-    ADMIN_API_KEY: c.env.ADMIN_API_KEY,
+    'X-API-KEY': c.env['X-API-KEY'],
     ORIGIN_URL: c.env.ORIGIN_URL,
   });
 

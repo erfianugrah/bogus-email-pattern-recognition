@@ -330,7 +330,7 @@ export default defineWorkersConfig({
 **File**: `.dev.vars` (for local testing)
 
 ```bash
-ADMIN_API_KEY=your-secret-key
+X-API-KEY=your-secret-key
 ORIGIN_URL=http://localhost:8787
 CLOUDFLARE_ACCOUNT_ID=your-account-id
 CLOUDFLARE_API_TOKEN=your-api-token

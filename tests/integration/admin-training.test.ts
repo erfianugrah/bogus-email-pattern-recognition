@@ -19,7 +19,7 @@ describe('Admin Training Endpoints', () => {
 		await worker.stop();
 	});
 
-	const ADMIN_API_KEY = 'test-api-key';
+	const TEST_API_KEY = 'test-api-key';
 
 	describe('POST /admin/markov/train', () => {
 		it('should require API key authentication', async () => {
@@ -36,7 +36,7 @@ describe('Admin Training Endpoints', () => {
 			const response = await worker.fetch('/admin/markov/train', {
 				method: 'POST',
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -50,7 +50,7 @@ describe('Admin Training Endpoints', () => {
 			const response = await worker.fetch('/admin/markov/train', {
 				method: 'POST',
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 					'Content-Type': 'application/json',
 				},
 			});
@@ -63,7 +63,7 @@ describe('Admin Training Endpoints', () => {
 			const response = await worker.fetch('/admin/markov/train', {
 				method: 'POST',
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -83,7 +83,7 @@ describe('Admin Training Endpoints', () => {
 		it('should return training status with valid API key', async () => {
 			const response = await worker.fetch('/admin/markov/status', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -100,7 +100,7 @@ describe('Admin Training Endpoints', () => {
 		it('should show training lock status', async () => {
 			const response = await worker.fetch('/admin/markov/status', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -115,7 +115,7 @@ describe('Admin Training Endpoints', () => {
 		it('should show KV namespace information', async () => {
 			const response = await worker.fetch('/admin/markov/status', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -130,7 +130,7 @@ describe('Admin Training Endpoints', () => {
 		it('should handle missing training history gracefully', async () => {
 			const response = await worker.fetch('/admin/markov/status', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -152,7 +152,7 @@ describe('Admin Training Endpoints', () => {
 		it('should return training history with valid API key', async () => {
 			const response = await worker.fetch('/admin/markov/history', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -167,7 +167,7 @@ describe('Admin Training Endpoints', () => {
 		it('should include cron schedule in response', async () => {
 			const response = await worker.fetch('/admin/markov/history', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -181,7 +181,7 @@ describe('Admin Training Endpoints', () => {
 		it('should handle empty history gracefully', async () => {
 			const response = await worker.fetch('/admin/markov/history', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -198,7 +198,7 @@ describe('Admin Training Endpoints', () => {
 		it('should limit history to 20 runs', async () => {
 			const response = await worker.fetch('/admin/markov/history', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -212,7 +212,7 @@ describe('Admin Training Endpoints', () => {
 		it('should return count of history entries', async () => {
 			const response = await worker.fetch('/admin/markov/history', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -254,7 +254,7 @@ describe('Admin Training Endpoints', () => {
 		it('should accept requests with valid API key', async () => {
 			const response = await worker.fetch('/admin/markov/status', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -277,7 +277,7 @@ describe('Admin Training Endpoints', () => {
 			const response = await worker.fetch('/admin/markov/train', {
 				method: 'POST',
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 				},
 			});
 
@@ -293,7 +293,7 @@ describe('Admin Training Endpoints', () => {
 		it('should include CORS headers in responses', async () => {
 			const response = await worker.fetch('/admin/markov/status', {
 				headers: {
-					'X-API-Key': ADMIN_API_KEY,
+					'X-API-Key': TEST_API_KEY,
 					'Origin': 'https://example.com',
 				},
 			});

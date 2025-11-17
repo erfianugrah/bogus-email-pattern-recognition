@@ -8,7 +8,7 @@ declare global {
 	// Extend the Env interface to include optional Worker secrets and bindings
 	interface Env {
 		// Secrets (set via wrangler secret put)
-		ADMIN_API_KEY?: string;
+		'X-API-KEY'?: string;
 		ORIGIN_URL?: string;
 		CLOUDFLARE_ACCOUNT_ID?: string;  // For Cloudflare API access
 		CLOUDFLARE_API_TOKEN?: string;   // For Cloudflare API access

@@ -127,7 +127,7 @@ While scheduled training is disabled, you can still manually trigger the online 
 ```bash
 # Manually trigger online training (uses last 7 days of production data)
 curl -X POST "https://your-worker.workers.dev/admin/markov/train" \
-  -H "X-API-Key: $ADMIN_API_KEY"
+  -H "X-API-Key: $X_API_KEY"
 ```
 
 **Response:**
@@ -272,7 +272,7 @@ npm run cli train:markov -- --orders "2,3" --upload --remote
 ```bash
 # Trigger online training via API (uses production data)
 curl -X POST "https://your-worker.workers.dev/admin/markov/train" \
-  -H "X-API-Key: $ADMIN_API_KEY"
+  -H "X-API-Key: $X_API_KEY"
 ```
 
 Note: API training uses model predictions as labels (circular reasoning risk). CLI training with labeled CSV data is preferred.

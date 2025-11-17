@@ -86,7 +86,7 @@ export interface FraudDetectionConfig {
 	// Admin API Configuration
 	admin: {
 		enabled: boolean; // Enable admin endpoints
-		// Note: ADMIN_API_KEY should be set as a Worker secret
+		// Note: X-API-KEY should be set as a Worker secret
 	};
 
 	// Markov Chain Configuration (Phase 7)
@@ -201,7 +201,7 @@ export const DEFAULT_CONFIG: FraudDetectionConfig = {
 		maxValidationsPerHour: 1000,
 	},
 
-	// Admin API disabled by default (enable with ADMIN_API_KEY secret)
+	// Admin API disabled by default (enable with X-API-KEY secret)
 	admin: {
 		enabled: false,
 	},

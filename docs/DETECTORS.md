@@ -710,7 +710,7 @@ else return 'low_risk';
 ```bash
 # 1. Collect training data from production Analytics
 curl "https://your-worker.workers.dev/admin/analytics" \
-  -H "X-API-Key: $ADMIN_API_KEY" > training-data.json
+  -H "X-API-Key: $X_API_KEY" > training-data.json
 
 # 2. Separate into legitimate and fraudulent sets
 # (manual labeling or use existing decisions)
@@ -755,7 +755,7 @@ All detectors can be enabled/disabled via configuration:
 Update via Admin API:
 ```bash
 curl -X PATCH https://your-worker.workers.dev/admin/config \
-  -H "X-API-Key: $ADMIN_API_KEY" \
+  -H "X-API-Key: $X_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"features": {"enableMarkovChainDetection": false}}'
 ```

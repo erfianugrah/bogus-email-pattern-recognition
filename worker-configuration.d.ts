@@ -10,7 +10,7 @@ declare namespace Cloudflare {
 		MARKOV_MODEL: KVNamespace;
 		DISPOSABLE_DOMAINS_LIST: KVNamespace;
 		TLD_LIST: KVNamespace;
-		ADMIN_API_KEY: string;
+		'X-API-KEY': string;
 		DB: D1Database;
 		ASSETS: Fetcher;
 	}

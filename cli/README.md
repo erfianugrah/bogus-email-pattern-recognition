@@ -214,7 +214,7 @@ npm run cli domains:cache:clear
 npm run cli domains:update --api-url https://my-worker.workers.dev
 ```
 
-**Requirements:** `ADMIN_API_KEY` environment variable. Optional `API_URL` environment variable or `--api-url` flag.
+**Requirements:** `X_API_KEY` environment variable. Optional `API_URL` environment variable or `--api-url` flag.
 
 Use `--help` for full options.
 
@@ -246,7 +246,7 @@ npm run cli tld:cache:clear
 npm run cli tld:sync --api-url https://my-worker.workers.dev
 ```
 
-**Requirements:** `ADMIN_API_KEY` environment variable. Optional `API_URL` environment variable or `--api-url` flag.
+**Requirements:** `X_API_KEY` environment variable. Optional `API_URL` environment variable or `--api-url` flag.
 
 Use `--help` for full options.
 
@@ -476,7 +476,7 @@ EOF
 
 For admin endpoints (domains, TLD management):
 ```bash
-export ADMIN_API_KEY="your_admin_key"
+export X_API_KEY="your_admin_key"
 export API_URL="https://your-worker.workers.dev"  # optional
 ```
 

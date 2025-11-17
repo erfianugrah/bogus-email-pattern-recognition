@@ -144,10 +144,10 @@ The configuration system includes:
 3. **Set Admin API Key** (enables configuration management):
    ```bash
    # For production
-   wrangler secret put ADMIN_API_KEY
+   wrangler secret put X-API-KEY
 
    # For local development, create .dev.vars:
-   echo "ADMIN_API_KEY=your-secret-key" > .dev.vars
+   echo "X-API-KEY=your-secret-key" > .dev.vars
    ```
 
 #### Configuration Options

@@ -106,7 +106,7 @@ export async function loadConfig(kv: KVNamespace, secrets?: Record<string, strin
 	// Override with secrets (if provided)
 	if (secrets) {
 		// Admin API secret
-		if (secrets.ADMIN_API_KEY) {
+		if (secrets['X-API-KEY']) {
 			config.admin.enabled = true;
 		}
 

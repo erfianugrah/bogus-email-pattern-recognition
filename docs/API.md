@@ -25,10 +25,10 @@ This API provides inline email validation to prevent fake account signups by ana
 Set up authentication:
 ```bash
 # Production
-wrangler secret put ADMIN_API_KEY
+wrangler secret put X-API-KEY
 
 # Local development (.dev.vars)
-ADMIN_API_KEY=your-secret-key
+X-API-KEY=your-secret-key
 ```
 
 ## Endpoints
@@ -514,7 +514,7 @@ const customRisk =
 
 Manage worker configuration at runtime without redeployment.
 
-**Authentication:** Requires `ADMIN_API_KEY` secret set via `X-API-Key` or `Authorization: Bearer` header.
+**Authentication:** Requires `X-API-KEY` secret set via `X-API-Key` or `Authorization: Bearer` header.
 
 ### GET /admin/health
 
@@ -668,7 +668,7 @@ curl -X DELETE https://your-worker.dev/admin/config/cache \
 ```json
 {
   "error": "Admin API is not enabled",
-  "message": "Set ADMIN_API_KEY secret to enable admin endpoints"
+  "message": "Set X-API-KEY secret to enable admin endpoints"
 }
 ```
 
@@ -1036,7 +1036,7 @@ is_valid = validate_email('test@example.com')
 
 ```bash
 # Set admin API key (production)
-wrangler secret put ADMIN_API_KEY
+wrangler secret put X-API-KEY
 
 # Use in requests
 curl -H "X-API-Key: your-secret-key" https://your-worker.workers.dev/admin/...
@@ -1144,7 +1144,7 @@ Manually trigger Markov Chain model retraining using production data from the la
 **Request:**
 ```bash
 curl -X POST "https://your-worker.workers.dev/admin/markov/train" \
-  -H "X-API-Key: $ADMIN_API_KEY"
+  -H "X-API-Key: $X_API_KEY"
 ```
 
 **Response (Success):**
@@ -1190,7 +1190,7 @@ curl -X POST "https://your-worker.workers.dev/admin/markov/train" \
 
 Access the analytics dashboard at: `https://your-worker.workers.dev/dashboard/`
 
-Enter your `ADMIN_API_KEY` when prompted. The dashboard uses the POST endpoint to fetch data.
+Enter your `X-API-KEY` when prompted. The dashboard uses the POST endpoint to fetch data.
 
 ---
 

@@ -7,7 +7,7 @@
  *
  * Or query via the admin API:
  *   curl https://your-worker.workers.dev/admin/analytics?hours=24 \
- *     -H "X-API-Key: $ADMIN_API_KEY"
+ *     -H "X-API-Key: $X_API_KEY"
  *
  * TODO: Migrate CLI to use D1 REST API or update to use admin API
  */

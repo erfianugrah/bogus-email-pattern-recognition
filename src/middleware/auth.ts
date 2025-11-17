@@ -14,11 +14,11 @@ export async function requireApiKey(c: Context, next: Next) {
 	const env = c.env;
 
 	// Check if admin is enabled
-	if (!env.ADMIN_API_KEY) {
+	if (!env['X-API-KEY']) {
 		return c.json(
 			{
 				error: 'Admin API is not enabled',
-				message: 'Set ADMIN_API_KEY secret to enable admin endpoints',
+				message: 'Set X-API-KEY secret to enable admin endpoints',
 			},
 			503
 		);
@@ -38,7 +38,7 @@ export async function requireApiKey(c: Context, next: Next) {
 	}
 
 	// Verify API key
-	if (apiKey !== env.ADMIN_API_KEY) {
+	if (apiKey !== env['X-API-KEY']) {
 		return c.json(
 			{
 				error: 'Forbidden',

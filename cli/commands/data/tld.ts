@@ -44,11 +44,11 @@ let globalApiUrl: string | undefined;
  */
 function getApiConfig() {
 	const apiUrl = globalApiUrl || process.env.API_URL || 'https://your-worker.workers.dev';
-	const apiKey = process.env.ADMIN_API_KEY;
+	const apiKey = process.env.X_API_KEY;
 
 	if (!apiKey) {
-		logger.error('ADMIN_API_KEY environment variable is required');
-		logger.info('Set it with: export ADMIN_API_KEY=your-api-key');
+		logger.error('X_API_KEY environment variable is required');
+		logger.info('Set it with: export X_API_KEY=your-api-key');
 		process.exit(1);
 	}
 
@@ -274,7 +274,7 @@ COMMANDS
   cache:clear           Clear the profiles cache
 
 ENVIRONMENT VARIABLES
-  ADMIN_API_KEY         API key for admin endpoints (required)
+  X_API_KEY             API key for admin endpoints (required)
   API_URL               API base URL (default: https://your-worker.workers.dev)
 
 OPTIONS

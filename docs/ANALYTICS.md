@@ -30,7 +30,7 @@ The fraud detection worker uses **Cloudflare D1** (SQLite) for analytics storage
 
 1. **Deploy your worker** with D1 database configured
 2. **Access the dashboard** at `https://your-worker.dev/dashboard/`
-3. **Enter your Admin API key** (from `ADMIN_API_KEY` secret)
+3. **Enter your Admin API key** (from `X-API-KEY` secret)
 4. **View real-time analytics** with interactive charts
 
 ### Using the API
@@ -560,7 +560,7 @@ Export metrics using a custom script:
 ```javascript
 // Fetch analytics via API
 const response = await fetch('https://your-worker.dev/admin/analytics?type=summary', {
-  headers: { 'X-API-Key': process.env.ADMIN_API_KEY }
+  headers: { 'X-API-Key': process.env.X_API_KEY }
 });
 const data = await response.json();
 

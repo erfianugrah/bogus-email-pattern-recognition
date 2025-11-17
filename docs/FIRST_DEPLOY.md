@@ -401,11 +401,11 @@ openssl rand -base64 32
 
 ```bash
 # Store in Cloudflare
-npx wrangler secret put ADMIN_API_KEY
+npx wrangler secret put X-API-KEY
 # Paste your key when prompted
 
 # For local dev, add to .dev.vars
-echo "ADMIN_API_KEY=xK9m2Qw7PzJ4nR6fT8hY3vC5bN1aM0sL" > .dev.vars
+echo "X-API-KEY=xK9m2Qw7PzJ4nR6fT8hY3vC5bN1aM0sL" > .dev.vars
 ```
 
 ### Test Admin API

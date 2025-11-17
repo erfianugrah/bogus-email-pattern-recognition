@@ -7,7 +7,7 @@
 #   openssl rand -hex 32
 # Or use:
 #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-ADMIN_API_KEY=your-secret-admin-api-key-here
+X-API-KEY=your-secret-admin-api-key-here
 
 # Origin URL (optional - for forwarding requests with fraud headers)
 # Only needed if you want to forward validation requests to another service
