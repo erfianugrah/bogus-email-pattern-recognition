@@ -42,7 +42,11 @@ export async function writeValidationMetricToD1(
           exclude_from_training, ip_reputation_score,
           experiment_id, variant, bucket,
           country, asn, latency,
-          pattern_classification_version
+          pattern_classification_version,
+          region, city, postal_code, timezone, latitude, longitude, continent, is_eu_country,
+          as_organization, colo, http_protocol, tls_version, tls_cipher,
+          client_trust_score, verified_bot, js_detection_passed, detection_ids,
+          ja3_hash, ja4, ja4_signals
         ) VALUES (
           ?1, ?2, ?3,
           ?4, ?5, ?6, ?7,
@@ -60,7 +64,11 @@ export async function writeValidationMetricToD1(
           ?35, ?36, ?37,
           ?38, ?39,
           ?40, ?41, ?42,
-          ?43
+          ?43,
+          ?44, ?45, ?46, ?47, ?48, ?49, ?50, ?51,
+          ?52, ?53, ?54, ?55, ?56,
+          ?57, ?58, ?59, ?60,
+          ?61, ?62, ?63
         )
       `)
       .bind(
@@ -120,7 +128,32 @@ export async function writeValidationMetricToD1(
         // Performance
         metric.latency,
         // Algorithm versioning (v2.1+)
-        metric.patternClassificationVersion || null
+        metric.patternClassificationVersion || null,
+        // Enhanced request.cf metadata (v2.5+)
+        // Geographic
+        metric.region || null,
+        metric.city || null,
+        metric.postalCode || null,
+        metric.timezone || null,
+        metric.latitude || null,
+        metric.longitude || null,
+        metric.continent || null,
+        metric.isEuCountry || null,
+        // Network
+        metric.asOrganization || null,
+        metric.colo || null,
+        metric.httpProtocol || null,
+        metric.tlsVersion || null,
+        metric.tlsCipher || null,
+        // Bot Detection
+        metric.clientTrustScore ?? null,
+        metric.verifiedBot ? 1 : 0,
+        metric.jsDetectionPassed ? 1 : 0,
+        metric.detectionIds ? JSON.stringify(metric.detectionIds) : null,
+        // Fingerprints
+        metric.ja3Hash || null,
+        metric.ja4 || null,
+        metric.ja4Signals ? JSON.stringify(metric.ja4Signals) : null
       )
       .run();
   } catch (error) {

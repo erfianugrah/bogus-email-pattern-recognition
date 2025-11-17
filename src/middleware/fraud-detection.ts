@@ -858,6 +858,10 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     }
   }
 
+  // Extract enhanced request.cf metadata (v2.5+)
+  const cf = (c.req.raw as any).cf || {};
+  const headers = c.req.raw.headers;
+
   writeValidationMetric(c.env.DB, {
     decision,
     riskScore,
@@ -895,7 +899,32 @@ export async function fraudDetectionMiddleware(c: Context, next: Next) {
     oodDetected: markovResult?.abnormalityScore ? markovResult.abnormalityScore > 0 : false,
     // OOD Zone (v2.4.1+)
     oodZone: oodZone,
-    patternClassificationVersion: PATTERN_CLASSIFICATION_VERSION
+    patternClassificationVersion: PATTERN_CLASSIFICATION_VERSION,
+    // Enhanced request.cf metadata (v2.5+) - Passed from forminator via RPC headers
+    // Geographic
+    region: cf.region || headers.get('cf-region') || undefined,
+    city: cf.city || headers.get('cf-ipcity') || undefined,
+    postalCode: cf.postalCode || headers.get('cf-postal-code') || undefined,
+    timezone: cf.timezone || headers.get('cf-timezone') || undefined,
+    latitude: cf.latitude || headers.get('cf-iplatitude') || undefined,
+    longitude: cf.longitude || headers.get('cf-iplongitude') || undefined,
+    continent: cf.continent || headers.get('cf-ipcontinent') || undefined,
+    isEuCountry: cf.isEUCountry,
+    // Network
+    asOrganization: cf.asOrganization,
+    colo: cf.colo,
+    httpProtocol: cf.httpProtocol,
+    tlsVersion: cf.tlsVersion,
+    tlsCipher: cf.tlsCipher,
+    // Bot Detection (Enhanced)
+    clientTrustScore: cf.clientTrustScore,
+    verifiedBot: cf.botManagement?.verifiedBot || headers.get('cf-verified-bot') === 'true',
+    jsDetectionPassed: (cf.botManagement as any)?.jsDetection?.passed,
+    detectionIds: (cf.botManagement as any)?.detectionIds,
+    // Fingerprints (Enhanced) - JA3/JA4 already in fingerprint.ts but add signals
+    ja3Hash: cf.botManagement?.ja3Hash || headers.get('cf-ja3-hash') || undefined,
+    ja4: (cf.botManagement as any)?.ja4 || headers.get('cf-ja4') || undefined,
+    ja4Signals: (cf.botManagement as any)?.ja4Signals,
   });
 
   // Store validation result in context for downstream handlers

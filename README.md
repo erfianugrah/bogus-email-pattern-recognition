@@ -490,6 +490,8 @@ WORKER_URL=https://your-worker.workers.dev npm run test:e2e
 - **[Configuration](docs/CONFIGURATION.md)** - Configuration management
 - **[Analytics](docs/ANALYTICS.md)** - D1 Database analytics and dashboard
 - **[Integration Guide](docs/INTEGRATION_GUIDE.md)** - Integration examples
+- **[RPC Integration](docs/RPC-INTEGRATION.md)** - Worker-to-Worker RPC with forminator (v2.5+ enhanced metadata)
+- **[Schema Initialization](docs/SCHEMA-INITIALIZATION.md)** - Database setup and initialization guide
 - **[System Status](docs/SYSTEM_STATUS.md)** - Current deployment status
 
 ### Recent Updates

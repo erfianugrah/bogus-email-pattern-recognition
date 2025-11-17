@@ -66,6 +66,31 @@ export interface ValidationMetric {
   bucket?: number;              // Hash bucket (0-99)
   // Algorithm versioning (v2.1+)
   patternClassificationVersion?: string;  // Pattern detection algorithm version
+  // Enhanced request.cf metadata (v2.5+) - Migration 0007
+  // Geographic
+  region?: string;              // State/province
+  city?: string;                // City name
+  postalCode?: string;          // Postal/ZIP code
+  timezone?: string;            // IANA timezone (e.g., "America/New_York")
+  latitude?: string;            // Geographic latitude
+  longitude?: string;           // Geographic longitude
+  continent?: string;           // Continent code (e.g., "NA")
+  isEuCountry?: string;         // EU country flag
+  // Network
+  asOrganization?: string;      // AS organization name
+  colo?: string;                // Cloudflare datacenter (e.g., "SJC")
+  httpProtocol?: string;        // HTTP version (e.g., "HTTP/2")
+  tlsVersion?: string;          // TLS version (e.g., "TLSv1.3")
+  tlsCipher?: string;           // TLS cipher suite
+  // Bot Detection (Enhanced)
+  clientTrustScore?: number;    // Cloudflare trust score
+  verifiedBot?: boolean;        // Known good bot (e.g., Googlebot)
+  jsDetectionPassed?: boolean;  // JavaScript challenge passed
+  detectionIds?: number[];      // Bot detection signal IDs
+  // Fingerprints (Enhanced)
+  ja3Hash?: string;             // JA3 TLS fingerprint
+  ja4?: string;                 // JA4 fingerprint string
+  ja4Signals?: Record<string, number>;  // JA4 signal scores
 }
 
 /**
