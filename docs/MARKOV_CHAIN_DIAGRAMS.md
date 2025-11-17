@@ -22,6 +22,51 @@ This document provides comprehensive visual diagrams of the entire Markov Chain-
 
 ---
 
+## Color Legend & Design System
+
+All diagrams use a consistent, color-blind friendly palette with semantic meaning:
+
+### Decision & Risk States
+
+| Color | Hex Code | Meaning | Usage |
+|-------|----------|---------|-------|
+| 🟢 **Green** | `#66BB6A` / `#C8E6C9` | Success / Allow / Legitimate | Final allow decisions, legitimate patterns, successful operations |
+| 🟠 **Orange** | `#FFA726` / `#FFE0B2` | Warning / OOD / Suspicious | Warn decisions, OOD detection, suspicious patterns |
+| 🔴 **Red** | `#EF5350` / `#FFCDD2` | Block / Fraud / Error | Block decisions, fraudulent patterns, errors, aborts |
+| 🟡 **Yellow** | `#FFF59D` / `#FFF9C4` | Decision Point / Check | Conditional branches, validation checks, thresholds |
+
+### Component Types
+
+| Color | Hex Code | Meaning | Usage |
+|-------|----------|---------|-------|
+| 🔵 **Blue** | `#64B5F6` / `#BBDEFB` | Processing / Calculation | Risk aggregation, calculations, transformations |
+| 🔵 **Light Blue** | `#E3F2FD` / `#B3E5FC` | Input / Start | Entry points, initial data, user input |
+| 🟣 **Purple** | `#E1BEE7` / `#F3E5F5` | ML / Markov Models | Machine learning components, Markov chains, model operations |
+| 🟣 **Indigo** | `#E8EAF6` / `#C5CAE9` | Storage / Database | D1 database, persistent storage, data retention |
+| ⚪ **Gray** | `#CFD8DC` | Infrastructure / Logging | System infrastructure, logging, neutral operations |
+
+### Emphasis & Importance
+
+| Stroke Width | Meaning |
+|--------------|---------|
+| **4px** | Critical decisions (ALLOW/WARN/BLOCK), final outcomes |
+| **3px** | Important components (Markov detector, key processes) |
+| **2px** | Standard components and operations |
+
+### Text Contrast
+
+All nodes with darker backgrounds (`#66BB6A`, `#EF5350`, `#64B5F6`) use **white text** (`color:#fff`) for readability.
+Lighter backgrounds use **black text** (`color:#000`) for optimal contrast.
+
+### Accessibility
+
+- **Color-blind friendly**: Uses distinct hues (blue, purple, green, orange, red)
+- **Shape variety**: Rectangles, diamonds, circles differentiate node types
+- **High contrast**: 4.5:1 minimum contrast ratio for WCAG AA compliance
+- **Stroke emphasis**: Important nodes have thicker borders independent of color
+
+---
+
 ## 1. High-Level System Architecture
 
 ```mermaid
@@ -99,9 +144,31 @@ graph TB
 
     L --> A
 
-    style F5 fill:#4CAF50,stroke:#2E7D32,stroke-width:3px,color:#fff
-    style F6 fill:#FF9800,stroke:#E65100,stroke-width:3px,color:#fff
-    style G fill:#2196F3,stroke:#0D47A1,stroke-width:2px,color:#fff
+    style A fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style B fill:#E8EAF6,stroke:#3F51B5,stroke-width:2px
+    style C fill:#FFF3E0,stroke:#F57C00,stroke-width:2px
+    style D fill:#E1F5FE,stroke:#0277BD,stroke-width:2px
+    style E fill:#E1F5FE,stroke:#0277BD,stroke-width:2px
+
+    style F1 fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
+    style F2 fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
+    style F3 fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
+    style F4 fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
+    style F5 fill:#C8E6C9,stroke:#388E3C,stroke-width:4px,color:#000
+    style F6 fill:#FFE0B2,stroke:#E65100,stroke-width:3px,color:#000
+
+    style G fill:#BBDEFB,stroke:#1565C0,stroke-width:3px,color:#000
+    style H fill:#B2DFDB,stroke:#00695C,stroke-width:3px,color:#000
+
+    style I1 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style I2 fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style I3 fill:#DCEDC8,stroke:#689F38,stroke-width:2px
+
+    style J fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style K fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+
+    style L fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+    style M fill:#CFD8DC,stroke:#455A64,stroke-width:2px
 ```
 
 ---
@@ -310,12 +377,49 @@ graph TB
     G4 --> G5
     G5 --> G6
 
-    style E2 fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
-    style E3 fill:#F44336,stroke:#C62828,stroke-width:2px
-    style G4 fill:#2196F3,stroke:#0D47A1,stroke-width:2px
-    style ABORT fill:#FF5722,stroke:#BF360C,stroke-width:2px
-    style ABORT2 fill:#FF5722,stroke:#BF360C,stroke-width:2px
-    style REJECT fill:#FFC107,stroke:#F57C00,stroke-width:2px
+    style A1 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    style A2 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style A3 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+
+    style B1 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style B2 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style B3 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style B4 fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style B5 fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+
+    style C1 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style C2 fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style C3 fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style C4 fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+
+    style D1 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style D2 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style D3 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style D4 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style D5 fill:#FFF59D,stroke:#F57C00,stroke-width:3px
+
+    style E1 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style E2 fill:#66BB6A,stroke:#2E7D32,stroke-width:4px,color:#fff
+    style E3 fill:#EF5350,stroke:#B71C1C,stroke-width:4px,color:#fff
+    style E4 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+
+    style F1 fill:#E8EAF6,stroke:#3F51B5,stroke-width:2px
+    style F2 fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style F3 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style F4 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style F5 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style F6 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+
+    style G1 fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style G2 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style G3 fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style G4 fill:#64B5F6,stroke:#0D47A1,stroke-width:4px,color:#fff
+    style G5 fill:#DCEDC8,stroke:#689F38,stroke-width:2px
+    style G6 fill:#CFD8DC,stroke:#455A64,stroke-width:2px
+
+    style ABORT fill:#EF5350,stroke:#B71C1C,stroke-width:4px,color:#fff
+    style ABORT2 fill:#EF5350,stroke:#B71C1C,stroke-width:4px,color:#fff
+    style REJECT fill:#FFA726,stroke:#E65100,stroke-width:4px,color:#000
 ```
 
 ---
@@ -422,11 +526,63 @@ graph TD
     WR3 --> RESPONSE
     ALLOW --> RESPONSE
 
-    style CRISK1 fill:#F44336,stroke:#C62828
-    style ARISK3 fill:#FF9800,stroke:#E65100
-    style BLOCK fill:#F44336,stroke:#C62828,stroke-width:3px
-    style WARN fill:#FFC107,stroke:#F57C00,stroke-width:3px
-    style ALLOW fill:#4CAF50,stroke:#2E7D32,stroke-width:3px
+    style START fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style MARKOV fill:#E1BEE7,stroke:#7B1FA2,stroke-width:3px,color:#000
+
+    style CROSS1 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style CROSS2 fill:#FFCCBC,stroke:#D84315,stroke-width:2px
+    style DIFF fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style CONF fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+
+    style CLASS fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style CRISK1 fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#000
+    style CRISK2 fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+
+    style MIN fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style ZONE fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style ARISK1 fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+    style ARISK2 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px,color:#000
+    style ARISK3 fill:#FFAB91,stroke:#D84315,stroke-width:2px,color:#000
+
+    style PAT1 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT2 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT3 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PATRISK1 fill:#FFCC80,stroke:#EF6C00,stroke-width:2px
+    style PATRISK2 fill:#FFCC80,stroke:#EF6C00,stroke-width:2px
+    style PATRISK3 fill:#FFE0B2,stroke:#F57C00,stroke-width:2px
+    style PATRISK4 fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+
+    style DOM1 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style DOM2 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style DOMRISK1 fill:#FFAB91,stroke:#D84315,stroke-width:2px
+    style DOMRISK2 fill:#FFAB91,stroke:#D84315,stroke-width:2px
+    style DOMRISK3 fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+
+    style MAX fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style MAXPAT fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style SUM fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style ADDDOM fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style CLAMP fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+
+    style DEC fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
+    style BLOCK fill:#EF5350,stroke:#B71C1C,stroke-width:4px,color:#fff
+    style WARN fill:#FFA726,stroke:#E65100,stroke-width:4px,color:#000
+    style ALLOW fill:#66BB6A,stroke:#2E7D32,stroke-width:4px,color:#fff
+
+    style REASON fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style BR1 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style BR2 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style BR3 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style BR4 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style BR5 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style BR6 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+
+    style WREASON fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style WR1 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style WR2 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style WR3 fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+
+    style RESPONSE fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
 ```
 
 ---
@@ -484,18 +640,35 @@ flowchart TD
 
     FIELDS --> END[Return Decision]
 
-    style DEAD fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
-    style WARN_ZONE fill:#FFC107,stroke:#F57C00,stroke-width:2px
-    style BLOCK_ZONE fill:#F44336,stroke:#C62828,stroke-width:2px
-    style FINAL fill:#2196F3,stroke:#0D47A1,stroke-width:3px
+    style START fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style MIN fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style CHECK fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
 
-    classDef deadClass fill:#C8E6C9,stroke:#388E3C
-    classDef warnClass fill:#FFF9C4,stroke:#F57C00
-    classDef blockClass fill:#FFCDD2,stroke:#C62828
+    style DEAD fill:#66BB6A,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style EX1 fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
 
-    class EX1 deadClass
-    class EX2 warnClass
-    class EX3 blockClass
+    style WARN_ZONE fill:#FFA726,stroke:#E65100,stroke-width:3px,color:#000
+    style PROGRESS fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style WARN_CALC fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style WARN_FLAG fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style EX2 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+
+    style BLOCK_ZONE fill:#EF5350,stroke:#B71C1C,stroke-width:3px,color:#fff
+    style BLOCK_FLAG fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style EX3 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+
+    style TWODIM fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style CLASS fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style FINAL fill:#64B5F6,stroke:#0D47A1,stroke-width:4px,color:#fff
+
+    style RISK_LEVEL fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
+    style R1 fill:#66BB6A,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style R2 fill:#FFA726,stroke:#E65100,stroke-width:3px,color:#000
+    style R3 fill:#EF5350,stroke:#B71C1C,stroke-width:3px,color:#fff
+
+    style DB fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style FIELDS fill:#E8EAF6,stroke:#3F51B5,stroke-width:2px
+    style END fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
 ```
 
 ---
@@ -568,12 +741,48 @@ graph TD
 
     METRICS --> OUTPUT[Return:<br/>- prediction<br/>- confidence<br/>- reasoning<br/>- both entropies]
 
-    style RULE1 fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
-    style OVERRIDE fill:#2196F3,stroke:#0D47A1,stroke-width:2px
-    style GIBBERISH fill:#FF9800,stroke:#E65100,stroke-width:2px
-    style DEFAULT fill:#9E9E9E,stroke:#424242,stroke-width:2px
-    style MODEL2 fill:#E3F2FD,stroke:#1976D2
-    style MODEL3 fill:#F3E5F5,stroke:#7B1FA2
+    style START fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style SPLIT fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+
+    style MODEL2 fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#000
+    style H2L fill:#E1F5FE,stroke:#0277BD,stroke-width:2px
+    style H2F fill:#FFCCBC,stroke:#D84315,stroke-width:2px
+    style CONF2 fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style PRED2 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PRED2F fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style PRED2L fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+
+    style MODEL3 fill:#F3E5F5,stroke:#7B1FA2,stroke-width:3px,color:#000
+    style H3L fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style H3F fill:#FFCCBC,stroke:#D84315,stroke-width:2px
+    style CONF3 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style PRED3 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PRED3F fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style PRED3L fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+
+    style AGREE fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
+    style RULE1 fill:#66BB6A,stroke:#2E7D32,stroke-width:3px,color:#fff
+
+    style CHECK3 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style RULE2 fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style OVERRIDE fill:#64B5F6,stroke:#0D47A1,stroke-width:3px,color:#fff
+
+    style CHECK_GIBBERISH fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style GIBBERISH fill:#FFA726,stroke:#E65100,stroke-width:3px,color:#000
+
+    style DISAGREE fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style DEFAULT fill:#CFD8DC,stroke:#455A64,stroke-width:3px,color:#000
+
+    style HIGHER fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style USE2 fill:#BBDEFB,stroke:#1976D2,stroke-width:2px
+    style USE3 fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+
+    style S2 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    style S3 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+
+    style FINAL fill:#64B5F6,stroke:#0D47A1,stroke-width:4px,color:#fff
+    style METRICS fill:#DCEDC8,stroke:#689F38,stroke-width:2px
+    style OUTPUT fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
 ```
 
 ---
@@ -739,15 +948,45 @@ graph LR
         AA -.->|API Training| M
     end
 
-    style F fill:#FFE082,stroke:#F57C00
-    style G fill:#81C784,stroke:#388E3C
-    style S fill:#64B5F6,stroke:#1976D2
-    style D fill:#BA68C8,stroke:#7B1FA2,stroke-width:3px
-    style L fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
+    style A fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style B fill:#E8EAF6,stroke:#3F51B5,stroke-width:3px,color:#000
+    style C fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style D fill:#E1BEE7,stroke:#7B1FA2,stroke-width:4px,color:#000
+    style E fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
 
-    linkStyle 10 stroke:#F44336,stroke-width:2px,stroke-dasharray: 5 5
-    linkStyle 11 stroke:#F44336,stroke-width:2px,stroke-dasharray: 5 5
-    linkStyle 12 stroke:#F44336,stroke-width:2px,stroke-dasharray: 5 5
+    style F fill:#FFF9C4,stroke:#F9A825,stroke-width:2px
+    style G fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style H fill:#CFD8DC,stroke:#455A64,stroke-width:2px
+
+    style I fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    style J fill:#64B5F6,stroke:#0D47A1,stroke-width:2px
+    style K fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+    style L fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+
+    style M fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style N fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style O fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+
+    style P fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    style Q fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style R fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+
+    style S fill:#F3E5F5,stroke:#6A1B9A,stroke-width:3px,color:#000
+    style T fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style U fill:#C8E6C9,stroke:#388E3C,stroke-width:3px,color:#000
+    style V fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+
+    style W fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+
+    style X fill:#DCEDC8,stroke:#689F38,stroke-width:2px
+    style Y fill:#CFD8DC,stroke:#455A64,stroke-width:2px
+    style Z fill:#E8EAF6,stroke:#3F51B5,stroke-width:2px
+
+    style AA fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+
+    linkStyle 10 stroke:#EF5350,stroke-width:2px,stroke-dasharray: 5 5
+    linkStyle 11 stroke:#EF5350,stroke-width:2px,stroke-dasharray: 5 5
+    linkStyle 12 stroke:#EF5350,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 ---
@@ -820,15 +1059,46 @@ flowchart TD
 
     CONFIDENCE --> RETURN[Return Results:<br/>- H_legit<br/>- H_fraud<br/>- prediction<br/>- confidence]
 
-    style GOOD fill:#4CAF50,stroke:#2E7D32
-    style OKAY fill:#8BC34A,stroke:#558B2F
-    style POOR fill:#FFC107,stroke:#F57C00
-    style OOD fill:#F44336,stroke:#C62828
-    style PRED_LEGIT fill:#81C784,stroke:#388E3C
-    style PRED_FRAUD fill:#E57373,stroke:#C62828
+    style START fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style CONTEXT fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style PAD fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style LOOP fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
 
-    classDef exampleClass fill:#E3F2FD,stroke:#1976D2
-    class EX1,EX2,EX3,EX4,EX5,EX6 exampleClass
+    style CHAR fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style LOOKUP fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style FOUND fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style CALC_PROB fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style SMOOTH fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style LOG fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style ACC fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style UPDATE fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style NEXT fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+
+    style AVG fill:#64B5F6,stroke:#0D47A1,stroke-width:3px,color:#fff
+
+    style EX1 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style EX2 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style EX3 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style EX4 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style EX5 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style EX6 fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+
+    style INTERPRET fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
+
+    style GOOD fill:#66BB6A,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style OKAY fill:#81C784,stroke:#388E3C,stroke-width:2px
+    style POOR fill:#FFA726,stroke:#E65100,stroke-width:2px,color:#000
+    style OOD fill:#EF5350,stroke:#B71C1C,stroke-width:3px,color:#fff
+
+    style LEGIT fill:#C8E6C9,stroke:#388E3C,stroke-width:3px,color:#000
+    style FRAUD fill:#FFCDD2,stroke:#C62828,stroke-width:3px,color:#000
+    style DIFF fill:#B3E5FC,stroke:#0277BD,stroke-width:2px
+    style DECISION fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
+    style PRED_LEGIT fill:#66BB6A,stroke:#2E7D32,stroke-width:3px,color:#fff
+    style PRED_FRAUD fill:#EF5350,stroke:#B71C1C,stroke-width:3px,color:#fff
+    style CONFIDENCE fill:#64B5F6,stroke:#0D47A1,stroke-width:3px,color:#fff
+
+    style RETURN fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
 ```
 
 ---
@@ -904,16 +1174,45 @@ graph TB
         MARKOV --> RESULT[Result: Accurate Models<br/>Learn TRUE patterns<br/>not message content]
     end
 
-    style ISSUE1 fill:#FFCDD2,stroke:#C62828
-    style ISSUE2 fill:#FFCDD2,stroke:#C62828
-    style MISMATCH fill:#F44336,stroke:#B71C1C,stroke-width:3px
-    style RELABEL fill:#2196F3,stroke:#0D47A1,stroke-width:3px
-    style BALANCE fill:#4CAF50,stroke:#2E7D32,stroke-width:2px
-    style RESULT fill:#4CAF50,stroke:#2E7D32,stroke-width:3px
+    style START fill:#E3F2FD,stroke:#1976D2,stroke-width:2px
+    style CHECK fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
 
-    style FRAUD_LABEL fill:#FFAB91,stroke:#D84315
-    style LEGIT_LABEL fill:#A5D6A7,stroke:#388E3C
-    style AMBIG_LABEL fill:#FFF59D,stroke:#F57C00
+    style CONTENT fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style ISSUE1 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style ISSUE2 fill:#FFCDD2,stroke:#C62828,stroke-width:2px
+    style MISMATCH fill:#EF5350,stroke:#B71C1C,stroke-width:4px,color:#fff
+
+    style RELABEL fill:#64B5F6,stroke:#0D47A1,stroke-width:4px,color:#fff
+    style ANALYZE fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+
+    style PAT1 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT2 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT3 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT4 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT5 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+    style PAT6 fill:#FFF9C4,stroke:#F57C00,stroke-width:2px
+
+    style SCORE fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style THRESHOLD fill:#FFF59D,stroke:#F57C00,stroke-width:3px,color:#000
+
+    style FRAUD_LABEL fill:#FFCDD2,stroke:#C62828,stroke-width:3px,color:#000
+    style AMBIG_LABEL fill:#FFF9C4,stroke:#F57C00,stroke-width:3px,color:#000
+    style LEGIT_LABEL fill:#C8E6C9,stroke:#388E3C,stroke-width:3px,color:#000
+
+    style COMPARE fill:#FFF59D,stroke:#F57C00,stroke-width:2px
+    style CHANGED fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style UNCHANGED fill:#C8E6C9,stroke:#388E3C,stroke-width:2px
+    style OUTPUT fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+
+    style STATS fill:#C5CAE9,stroke:#303F9F,stroke-width:2px
+    style BALANCE fill:#66BB6A,stroke:#2E7D32,stroke-width:4px,color:#fff
+    style EXAMPLES fill:#E8EAF6,stroke:#3F51B5,stroke-width:2px
+
+    style TRAIN fill:#E1BEE7,stroke:#7B1FA2,stroke-width:2px
+    style SEPARATE fill:#BBDEFB,stroke:#1565C0,stroke-width:2px
+    style EXCLUDE fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px
+    style MARKOV fill:#E1BEE7,stroke:#7B1FA2,stroke-width:3px
+    style RESULT fill:#66BB6A,stroke:#2E7D32,stroke-width:4px,color:#fff
 ```
 
 ---
