@@ -186,22 +186,22 @@ sequenceDiagram
 
     Client->>Worker: POST /validate<br/>{email: "user@example.com"}
 
-    rect rgb(200, 230, 255)
-        Note over Worker: Phase 1: Input Processing
+    rect rgb(227, 242, 253)
+        Note over Worker: Phase 1: Input Processing 🔵
         Worker->>Worker: Parse & validate JSON
         Worker->>Worker: Generate fingerprint<br/>(IP+JA4+ASN+BotScore)
         Worker->>Worker: Hash email (SHA-256)
     end
 
-    rect rgb(255, 240, 200)
-        Note over Worker: Phase 2: Format Validation
+    rect rgb(225, 245, 254)
+        Note over Worker: Phase 2: Format Validation 🔵
         Worker->>Worker: Check email format (RFC 5322)
         Worker->>Worker: Calculate entropy<br/>H(X) = -Σ p(x) log₂(p(x))
         Worker->>Worker: Validate domain<br/>(disposable check)
     end
 
-    rect rgb(200, 255, 200)
-        Note over Worker: Phase 3: Pattern Detection
+    rect rgb(255, 249, 196)
+        Note over Worker: Phase 3: Pattern Detection 🟡
         par Parallel Detection
             Worker->>Worker: Sequential pattern<br/>(user123, test001)
         and
@@ -213,8 +213,8 @@ sequenceDiagram
         end
     end
 
-    rect rgb(255, 220, 255)
-        Note over Worker,Models: Phase 4: Markov Chain Analysis
+    rect rgb(243, 229, 245)
+        Note over Worker,Models: Phase 4: Markov Chain Analysis 🟣 ML
         Worker->>KV: Load models<br/>(cached globally)
         KV-->>Worker: MM_legit_2gram<br/>MM_fraud_2gram
 
@@ -228,36 +228,36 @@ sequenceDiagram
         Worker->>Worker: Calculate confidence<br/>abs(diff) / H_legit
     end
 
-    rect rgb(255, 200, 200)
-        Note over Worker: Phase 5: OOD Detection
+    rect rgb(255, 224, 178)
+        Note over Worker: Phase 5: OOD Detection 🟠
         Worker->>Worker: minEntropy = min(H_legit, H_fraud)
 
         alt minEntropy < 3.8 (Dead Zone)
-            Worker->>Worker: abnormalityRisk = 0
+            Worker->>Worker: ✅ abnormalityRisk = 0
         else minEntropy 3.8-5.5 (Warn Zone)
-            Worker->>Worker: abnormalityRisk = 0.35 + linear
+            Worker->>Worker: ⚠️ abnormalityRisk = 0.35 + linear
         else minEntropy > 5.5 (Block Zone)
-            Worker->>Worker: abnormalityRisk = 0.65
+            Worker->>Worker: 🚫 abnormalityRisk = 0.65
         end
     end
 
-    rect rgb(200, 220, 255)
-        Note over Worker: Phase 6: Risk Scoring
+    rect rgb(187, 222, 251)
+        Note over Worker: Phase 6: Risk Scoring 🔵
         Worker->>Worker: classificationRisk = markov confidence
         Worker->>Worker: finalRisk = max(classification, abnormality)
         Worker->>Worker: finalRisk += domainRisk
 
         alt finalRisk > 0.6
-            Worker->>Worker: decision = "block"
+            Worker->>Worker: 🚫 decision = BLOCK
         else finalRisk > 0.3
-            Worker->>Worker: decision = "warn"
+            Worker->>Worker: ⚠️ decision = WARN
         else
-            Worker->>Worker: decision = "allow"
+            Worker->>Worker: ✅ decision = ALLOW
         end
     end
 
-    rect rgb(220, 220, 220)
-        Note over Worker,D1: Phase 7: Logging & Analytics
+    rect rgb(236, 239, 241)
+        Note over Worker,D1: Phase 7: Logging & Analytics ⚪
         par Parallel Writes (non-blocking)
             Worker->>Analytics: Write validation metric<br/>(async)
         and
@@ -265,10 +265,31 @@ sequenceDiagram
         end
     end
 
-    Worker-->>Client: JSON Response<br/>{decision, riskScore, signals}
+    Worker-->>Client: ✅ JSON Response<br/>{decision, riskScore, signals}
 
-    Note over Worker,Client: Total latency: ~35ms
+    Note over Worker,Client: ⏱️ Total latency: ~35ms
 ```
+
+### Phase Color Coding
+
+The sequence diagram uses color-coded phases matching the semantic design system:
+
+| Phase | Color | Meaning | Components |
+|-------|-------|---------|------------|
+| **Phase 1-2** | 🔵 Light Blue | Input & Validation | Entry point processing, format checks |
+| **Phase 3** | 🟡 Yellow | Detection | Pattern analysis (sequential, dated, plus-addressing, TLD) |
+| **Phase 4** | 🟣 Purple | Machine Learning | Markov Chain cross-entropy analysis |
+| **Phase 5** | 🟠 Orange | OOD Detection | Abnormality detection with 3-zone thresholds |
+| **Phase 6** | 🔵 Blue | Risk Processing | Final risk aggregation and decision logic |
+| **Phase 7** | ⚪ Gray | Infrastructure | Logging and analytics (non-blocking) |
+
+### Decision Outcomes
+
+- ✅ **ALLOW** (Green zone) - Risk < 0.3, legitimate pattern
+- ⚠️ **WARN** (Orange zone) - Risk 0.3-0.6, suspicious pattern
+- 🚫 **BLOCK** (Red zone) - Risk > 0.6, fraudulent pattern
+
+**Total Request Latency**: ~35ms average (P50), <50ms P95
 
 ---
 
